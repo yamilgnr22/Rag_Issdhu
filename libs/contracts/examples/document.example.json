@@ -1,0 +1,13 @@
+{
+  "document_id": "doc_001",
+  "source": "filesystem",
+  "source_authority": "primary",
+  "mime_type": "application/pdf",
+  "language": "es",
+  "acl": {
+    "users": [],
+    "groups": ["compliance"]
+  },
+  "created_at": "2026-03-18T12:00:00Z"
+}
+

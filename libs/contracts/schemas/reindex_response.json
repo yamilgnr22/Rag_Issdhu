@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "reindex_response.json",
+  "title": "ReindexResponse",
+  "type": "object",
+  "required": [
+    "processed_versions",
+    "indexed_versions",
+    "skipped_versions",
+    "failed_versions",
+    "indexed_chunks",
+    "qdrant_collection",
+    "opensearch_index",
+    "embedding_source",
+    "results"
+  ],
+  "properties": {
+    "processed_versions": { "type": "integer", "minimum": 0 },
+    "indexed_versions": { "type": "integer", "minimum": 0 },
+    "skipped_versions": { "type": "integer", "minimum": 0 },
+    "failed_versions": { "type": "integer", "minimum": 0 },
+    "indexed_chunks": { "type": "integer", "minimum": 0 },
+    "qdrant_collection": { "type": "string" },
+    "opensearch_index": { "type": "string" },
+    "embedding_source": {
+      "type": "string",
+      "enum": ["hash", "local_openai", "cloud_openai"]
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "version_id",
+          "document_id",
+          "status",
+          "chunks_indexed"
+        ],
+        "properties": {
+          "version_id": { "type": "string" },
+          "document_id": { "type": "string" },
+          "document_class": {
+            "type": ["string", "null"],
+            "enum": ["legal_normative", "technical_standard", "general_document", null]
+          },
+          "document_family": {
+            "type": ["string", "null"],
+            "enum": ["normative", "general", null]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["indexed", "skipped", "error"]
+          },
+          "chunks_indexed": { "type": "integer", "minimum": 0 },
+          "reason": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

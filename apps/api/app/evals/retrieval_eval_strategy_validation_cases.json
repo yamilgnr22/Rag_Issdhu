@@ -1,0 +1,354 @@
+{
+  "cases": [
+    {
+      "case_id": "planner_validation_focal_ley822_fuente_nicaraguense_rentas_trabajo",
+      "suite_id": "planner_validation_focal",
+      "strategy": "focal",
+      "question": "Que situaciones considera la Ley 822 como rentas del trabajo de fuente nicaraguense, incluso cuando el trabajo se realiza fuera del pais o en organos colegiados?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "trabajo realizado fuera del territorio nacional",
+          "residente nicaraguense",
+          "establecimiento permanente",
+          "tripulacion de naves",
+          "directorios"
+        ]
+      },
+      "notes": "expected_label: Capitulo I > Seccion III > Art. 12"
+    },
+    {
+      "case_id": "planner_validation_focal_codigo_trabajo_contrato_contenido_minimo",
+      "suite_id": "planner_validation_focal",
+      "strategy": "focal",
+      "question": "Que contenido minimo debe tener un contrato individual de trabajo por escrito segun el Codigo del Trabajo?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "codigo-trabajo.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "lugar y la fecha",
+          "identificacion y domicilio de las partes",
+          "descripcion del trabajo",
+          "duracion diaria y semanal de la jornada",
+          "cuantia de la remuneracion"
+        ]
+      },
+      "notes": "expected_label: Titulo II > Capitulo I > Art. 20"
+    },
+    {
+      "case_id": "planner_validation_focal_niif_criterios_reconocimiento",
+      "suite_id": "planner_validation_focal",
+      "strategy": "focal",
+      "question": "Que criterios deben cumplirse para reconocer un activo, pasivo, ingreso o gasto segun la NIIF para las PYMES?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "reconocimiento",
+          "beneficio economico futuro",
+          "probable",
+          "medido con fiabilidad",
+          "costo o valor"
+        ]
+      },
+      "notes": "expected_label: Seccion 2 > 2.27-2.30"
+    },
+    {
+      "case_id": "planner_validation_focal_gafi_recomendacion14_transferencias",
+      "suite_id": "planner_validation_focal",
+      "strategy": "focal",
+      "question": "Que exige la Recomendacion 14 del GAFI para los servicios de transferencia de dinero o valores y sus agentes?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "licencia o esten registradas",
+          "servicios de transferencia de dinero o valores",
+          "agente",
+          "lista actualizada de sus agentes",
+          "sanciones debidas"
+        ]
+      },
+      "notes": "expected_label: Recomendacion 14"
+    },
+    {
+      "case_id": "planner_validation_focal_gafi_recomendacion29_uif",
+      "suite_id": "planner_validation_focal",
+      "strategy": "focal",
+      "question": "Que funciones minimas debe cumplir una Unidad de Inteligencia Financiera segun la Recomendacion 29 del GAFI?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "centro nacional",
+          "recepcion y analisis",
+          "reportes de transacciones sospechosas",
+          "comunicacion de los resultados",
+          "informacion financiera, administrativa y del orden publico"
+        ]
+      },
+      "notes": "expected_label: Recomendacion 29"
+    },
+    {
+      "case_id": "planner_validation_multi_branch_ley822_fuente_nicaraguense_vinculos",
+      "suite_id": "planner_validation_multi_branch",
+      "strategy": "multi_branch",
+      "question": "Que articulos de la Ley 822 desarrollan las definiciones y vinculos economicos de las rentas de fuente nicaraguense?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "Art. 10",
+          "Art. 12",
+          "Art. 14",
+          "Art. 15",
+          "Art. 16"
+        ]
+      }
+    },
+    {
+      "case_id": "planner_validation_multi_branch_codigo_trabajo_obligaciones_partes",
+      "suite_id": "planner_validation_multi_branch",
+      "strategy": "multi_branch",
+      "question": "Que articulos del Codigo del Trabajo regulan las obligaciones del empleador y del trabajador dentro de la relacion laboral?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "codigo-trabajo.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "obligaciones de los empleadores",
+          "obligaciones de los trabajadores",
+          "pagar el salario",
+          "respetar",
+          "cumplir con las jornadas"
+        ]
+      }
+    },
+    {
+      "case_id": "planner_validation_multi_branch_niif_cualidades_utilidad",
+      "suite_id": "planner_validation_multi_branch",
+      "strategy": "multi_branch",
+      "question": "Que apartados de la NIIF para las PYMES explican las cualidades de la informacion financiera util?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "comprensibilidad",
+          "relevancia",
+          "materialidad o importancia relativa",
+          "fiabilidad",
+          "comparabilidad"
+        ]
+      }
+    },
+    {
+      "case_id": "planner_validation_multi_branch_gafi_regulacion_supervision_autoridades",
+      "suite_id": "planner_validation_multi_branch",
+      "strategy": "multi_branch",
+      "question": "Que recomendaciones del GAFI se relacionan con la regulacion, supervision y facultades de las autoridades competentes?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "Regulacion y supervision de las instituciones financieras",
+          "Facultades de los supervisores",
+          "Regulacion y supervision de las APNFD",
+          "Unidades de inteligencia financiera",
+          "autoridades de orden publico e investigativas"
+        ]
+      }
+    },
+    {
+      "case_id": "planner_validation_multi_branch_ley822_exencion_subjetiva_actividades",
+      "suite_id": "planner_validation_multi_branch",
+      "strategy": "multi_branch",
+      "question": "Que articulos de la Ley 822 regulan la exencion subjetiva y sus condiciones para rentas de actividades economicas?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "Universidades",
+          "iglesias",
+          "sociedades cooperativas",
+          "condiciones para las exenciones subjetivas",
+          "retenciones correspondientes"
+        ]
+      }
+    },
+    {
+      "case_id": "planner_validation_global_ley822_categorias_renta",
+      "suite_id": "planner_validation_global",
+      "strategy": "global",
+      "question": "Como organiza la Ley 822 el tratamiento tributario de las distintas categorias de renta dentro del impuesto sobre la renta?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "rentas del trabajo",
+          "rentas de actividades economicas",
+          "rentas de capital",
+          "ganancias y perdidas de capital",
+          "fuente nicaraguense"
+        ]
+      }
+    },
+    {
+      "case_id": "planner_validation_global_codigo_trabajo_relacion_laboral_estructura",
+      "suite_id": "planner_validation_global",
+      "strategy": "global",
+      "question": "Que vision general ofrece el Codigo del Trabajo sobre la estructura de la relacion laboral desde su inicio hasta su terminacion?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "codigo-trabajo.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "contrato de trabajo",
+          "relacion laboral",
+          "suspension",
+          "terminacion del contrato",
+          "jornada de trabajo"
+        ]
+      }
+    },
+    {
+      "case_id": "planner_validation_global_niif_marco_conceptual_general",
+      "suite_id": "planner_validation_global",
+      "strategy": "global",
+      "question": "Que marco conceptual general presenta la NIIF para las PYMES para preparar estados financieros utiles para usuarios externos?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "usuarios externos",
+          "proposito de informacion general",
+          "objetivo de los estados financieros",
+          "caracteristicas cualitativas",
+          "bases de medicion"
+        ]
+      }
+    },
+    {
+      "case_id": "planner_validation_global_gafi_sistema_internacional_alacft",
+      "suite_id": "planner_validation_global",
+      "strategy": "global",
+      "question": "Que panorama general presenta el documento del GAFI sobre el sistema internacional ALA/CFT y contra el financiamiento de la proliferacion?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "lavado de activos",
+          "financiamiento del terrorismo",
+          "financiamiento de la proliferacion",
+          "estandar internacional",
+          "evaluaciones mutuas"
+        ]
+      }
+    },
+    {
+      "case_id": "planner_validation_global_gafi_arquitectura_tematica",
+      "suite_id": "planner_validation_global",
+      "strategy": "global",
+      "question": "Que arquitectura tematica completa cubren las Recomendaciones del GAFI desde politicas nacionales hasta cooperacion internacional?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "politicas y coordinacion",
+          "medidas preventivas",
+          "transparencia y beneficiario final",
+          "autoridades competentes",
+          "cooperacion internacional"
+        ]
+      }
+    }
+  ]
+}

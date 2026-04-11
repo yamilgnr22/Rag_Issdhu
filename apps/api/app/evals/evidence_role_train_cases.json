@@ -1,0 +1,254 @@
+[
+  {
+    "case_id": "role_substantive_ley822_art25",
+    "role": "substantive",
+    "path_text": "CAPITULO II > Arto. 25",
+    "canonical_label": "Arto. 25",
+    "unit_topic": "Obligacion de retener, liquidar, declarar y enterar el impuesto",
+    "chunk_kind": "article",
+    "text": "Art. 25 Obligacion de retener, liquidar, declarar y enterar el impuesto. Los empleadores personas naturales o juridicas estan obligados a retener mensualmente y a liquidar, declarar y enterar el impuesto."
+  },
+  {
+    "case_id": "role_substantive_ley822_art21",
+    "role": "substantive",
+    "path_text": "CAPITULO II > Arto. 21",
+    "canonical_label": "Arto. 21",
+    "unit_topic": "Deducciones autorizadas",
+    "chunk_kind": "article",
+    "text": "Art. 21 Deducciones autorizadas. Se permite una deduccion equivalente al 25% de gastos en educacion, salud y servicios profesionales, hasta por un monto maximo anual."
+  },
+  {
+    "case_id": "role_substantive_codigo_art45",
+    "role": "substantive",
+    "path_text": "Titulo II > Capitulo VI > Articulo 45",
+    "canonical_label": "Articulo 45",
+    "unit_topic": "Indemnizacion por despido sin causa justificada",
+    "chunk_kind": "article",
+    "text": "Cuando el empleador rescinda el contrato por tiempo indeterminado y sin causa justificada pagara al trabajador una indemnizacion equivalente a un mes de salario por cada uno de los primeros tres anos."
+  },
+  {
+    "case_id": "role_substantive_codigo_art48",
+    "role": "substantive",
+    "path_text": "Titulo II > Capitulo VI > Articulo 48",
+    "canonical_label": "Articulo 48",
+    "unit_topic": "Autorizacion previa por causal grave",
+    "chunk_kind": "article",
+    "text": "El empleador que invoque una falta grave de probidad debera solicitar autorizacion del Inspector Departamental del Trabajo, con audiencia al trabajador y posibilidad de apelacion."
+  },
+  {
+    "case_id": "role_substantive_niif_sec3",
+    "role": "substantive",
+    "path_text": "Seccion 3 > Cumplimiento con la NIIF para las PYMES",
+    "canonical_label": "Seccion 3",
+    "unit_topic": "Cumplimiento con la NIIF para las PYMES",
+    "chunk_kind": "section",
+    "text": "Una entidad cuyos estados financieros cumplan la NIIF para las PYMES efectuara en las notas una declaracion explicita y sin reservas de dicho cumplimiento."
+  },
+  {
+    "case_id": "role_substantive_niif_sec7",
+    "role": "substantive",
+    "path_text": "Seccion 7 Estado de Flujos de Efectivo > Actividades de inversion",
+    "canonical_label": "Seccion 7 Estado de Flujos de Efectivo",
+    "unit_topic": "Estado de Flujos de Efectivo",
+    "chunk_kind": "section",
+    "text": "Las actividades de inversion incluyen pagos por la adquisicion de propiedades, planta y equipo y cobros por su venta, dentro del estado de flujos de efectivo."
+  },
+  {
+    "case_id": "role_substantive_niif_sec11",
+    "role": "substantive",
+    "path_text": "Seccion 11 > Instrumentos financieros basicos",
+    "canonical_label": "Seccion 11",
+    "unit_topic": "Instrumentos financieros basicos",
+    "chunk_kind": "section",
+    "text": "La Seccion 11 se aplicara a los instrumentos financieros basicos y establece su reconocimiento, medicion y revelacion."
+  },
+  {
+    "case_id": "role_substantive_niif_sec12",
+    "role": "substantive",
+    "path_text": "Seccion 12 > Otros temas relacionados con los instrumentos financieros",
+    "canonical_label": "Seccion 12",
+    "unit_topic": "Otros temas relacionados con los instrumentos financieros",
+    "chunk_kind": "section",
+    "text": "La Seccion 12 trata otros temas relacionados con instrumentos financieros, incluyendo contabilidad de coberturas y mediciones al valor razonable."
+  },
+  {
+    "case_id": "role_substantive_niif_sec2",
+    "role": "substantive",
+    "path_text": "Seccion 2 Conceptos y Principios Fundamentales > Activos no financieros",
+    "canonical_label": "Seccion 2",
+    "unit_topic": "Conceptos y Principios Fundamentales",
+    "chunk_kind": "section",
+    "text": "Los activos no financieros, como propiedades, planta y equipo, pueden medirse posteriormente al costo menos depreciacion y deterioro o al importe revaluado."
+  },
+  {
+    "case_id": "role_substantive_gafi_r10",
+    "role": "substantive",
+    "path_text": "Recomendacion 10",
+    "canonical_label": "Recomendacion 10",
+    "unit_topic": "Debida diligencia del cliente",
+    "chunk_kind": "section",
+    "text": "Las instituciones financieras deben aplicar debida diligencia del cliente cuando establezcan relaciones comerciales, realicen transacciones ocasionales o exista sospecha de lavado de activos."
+  },
+  {
+    "case_id": "role_substantive_gafi_r24",
+    "role": "substantive",
+    "path_text": "Recomendacion 24",
+    "canonical_label": "Recomendacion 24",
+    "unit_topic": "Beneficiario final de las personas juridicas",
+    "chunk_kind": "section",
+    "text": "Los paises deben asegurar que la informacion sobre beneficiario final de las personas juridicas sea adecuada, precisa y actualizada y este disponible para las autoridades competentes."
+  },
+  {
+    "case_id": "role_substantive_gafi_r29",
+    "role": "substantive",
+    "path_text": "Recomendacion 29",
+    "canonical_label": "Recomendacion 29",
+    "unit_topic": "Unidad de Inteligencia Financiera",
+    "chunk_kind": "section",
+    "text": "La UIF debe servir como centro nacional para la recepcion y analisis de reportes de operaciones sospechosas y otra informacion relevante."
+  },
+  {
+    "case_id": "role_reference_niif_tabla_fuentes",
+    "role": "reference",
+    "path_text": "NIIF PARA LAS PYMES-2015 > Tabla de fuentes",
+    "canonical_label": "Tabla de fuentes",
+    "unit_topic": "Correspondencia de secciones y fuentes",
+    "chunk_kind": "table",
+    "text": "Tabla que muestra la seccion de la NIIF para las PYMES y sus fuentes de referencia en las NIIF completas."
+  },
+  {
+    "case_id": "role_reference_niif_continuacion",
+    "role": "reference",
+    "path_text": "NIIF PARA LAS PYMES-2015 > ...continuacion",
+    "canonical_label": "Tabla de contenido continuacion",
+    "unit_topic": "Listado de secciones y NIC relacionadas",
+    "chunk_kind": "table",
+    "text": "Tabla de continuidad con numeros de seccion, nombres de temas y referencias a NIC o NIIF relacionadas."
+  },
+  {
+    "case_id": "role_reference_niif_indices",
+    "role": "reference",
+    "path_text": "INDICE",
+    "canonical_label": "Indice general",
+    "unit_topic": "Estructura general de la norma",
+    "chunk_kind": "reference_table",
+    "text": "Indice general de la norma con el listado de secciones, apartados y paginas."
+  },
+  {
+    "case_id": "role_reference_niif_glosario_tabla",
+    "role": "reference",
+    "path_text": "Apendice B Glosario de terminos",
+    "canonical_label": "Glosario de terminos",
+    "unit_topic": "Definiciones alfabeticas",
+    "chunk_kind": "table",
+    "text": "Tabla del glosario que lista terminos y definiciones de referencia para la norma."
+  },
+  {
+    "case_id": "role_reference_gafi_contenido",
+    "role": "reference",
+    "path_text": "LAS RECOMENDACIONES DEL GAFI",
+    "canonical_label": "Contenido",
+    "unit_topic": "Mapa de recomendaciones y bloques",
+    "chunk_kind": "table",
+    "text": "Tabla de contenido que enumera numeros de recomendacion, bloques tematicos y equivalencias historicas."
+  },
+  {
+    "case_id": "role_reference_niif_modificaciones",
+    "role": "reference",
+    "path_text": "Apendice A Fecha de vigencia y transicion",
+    "canonical_label": "Apendice A",
+    "unit_topic": "Listado de parrafos modificados",
+    "chunk_kind": "section",
+    "text": "A1 Modificaciones de 2015 lista los parrafos y secciones modificadas en la NIIF para las PYMES."
+  },
+  {
+    "case_id": "role_reference_niif_estado_combinado_tabla",
+    "role": "reference",
+    "path_text": "NIIF PARA LAS PYMES-2015",
+    "canonical_label": "Tabla de estados financieros combinados",
+    "unit_topic": "Resumen tabular de requerimientos",
+    "chunk_kind": "table",
+    "text": "Tabla numerada que resume requerimientos sobre estados financieros combinados y remisiones a otras secciones."
+  },
+  {
+    "case_id": "role_reference_gafi_nota_interpretativa_indice",
+    "role": "reference",
+    "path_text": "LAS RECOMENDACIONES DEL GAFI > Nota interpretativa",
+    "canonical_label": "Nota interpretativa de la recomendacion 2",
+    "unit_topic": "Referencia interpretativa",
+    "chunk_kind": "section",
+    "text": "Nota interpretativa asociada a la recomendacion 2 con fines de referencia y aclaracion sobre coordinacion nacional."
+  },
+  {
+    "case_id": "role_editorial_niif_iasb",
+    "role": "editorial",
+    "path_text": "NIIF PARA LAS PYMES-2015 > El IASB",
+    "canonical_label": "El IASB",
+    "unit_topic": "Presentacion institucional",
+    "chunk_kind": "preamble",
+    "text": "El Consejo de Normas Internacionales de Contabilidad se establecio en 2001 como parte de la Fundacion IASC."
+  },
+  {
+    "case_id": "role_editorial_niif_norma",
+    "role": "editorial",
+    "path_text": "NIIF PARA LAS PYMES-2015 > La NIIF para las PYMES",
+    "canonical_label": "La NIIF para las PYMES",
+    "unit_topic": "Presentacion general de la norma",
+    "chunk_kind": "preamble",
+    "text": "El IASB desarrolla y emite una norma separada dirigida a estados financieros con proposito de informacion general de pequenas y medianas entidades."
+  },
+  {
+    "case_id": "role_editorial_niif_organizacion",
+    "role": "editorial",
+    "path_text": "NIIF PARA LAS PYMES-2015 > Organizacion de la NIIF para las PYMES",
+    "canonical_label": "Organizacion de la NIIF para las PYMES",
+    "unit_topic": "Descripcion editorial de la estructura",
+    "chunk_kind": "preamble",
+    "text": "Se describe como esta organizada la norma y que secciones cubren temas de reconocimiento, medicion, presentacion y revelacion."
+  },
+  {
+    "case_id": "role_editorial_gafi_intro",
+    "role": "editorial",
+    "path_text": "INTRODUCCION",
+    "canonical_label": "Introduccion",
+    "unit_topic": "Mandato y contexto del GAFI",
+    "chunk_kind": "section",
+    "text": "El GAFI es un ente intergubernamental establecido en 1989 para fijar estandares y promover su implementacion."
+  },
+  {
+    "case_id": "role_editorial_niif_copyright",
+    "role": "editorial",
+    "path_text": "Copyright",
+    "canonical_label": "Copyright IFRS Foundation",
+    "unit_topic": "Aviso legal",
+    "chunk_kind": "preamble",
+    "text": "Todos los derechos reservados. Ninguna parte de esta publicacion puede reproducirse sin autorizacion previa."
+  },
+  {
+    "case_id": "role_editorial_niif_disclaimer",
+    "role": "editorial",
+    "path_text": "Norma NIIF para las PYMES",
+    "canonical_label": "Disclaimer",
+    "unit_topic": "Exclusion de responsabilidad",
+    "chunk_kind": "preamble",
+    "text": "La IFRS Foundation, los autores y los editores no aceptan responsabilidad por perdida causada por actuar o abstenerse de actuar en base a esta publicacion."
+  },
+  {
+    "case_id": "role_editorial_ley822_documento",
+    "role": "editorial",
+    "path_text": "Ley 822",
+    "canonical_label": "Portada o encabezado",
+    "unit_topic": "Identificacion del documento",
+    "chunk_kind": "preamble",
+    "text": "Ley de Concertacion Tributaria, publicada en La Gaceta, Diario Oficial, con datos editoriales de promulgacion."
+  },
+  {
+    "case_id": "role_editorial_codigo_trabajo_portada",
+    "role": "editorial",
+    "path_text": "Codigo del Trabajo",
+    "canonical_label": "Portada del Codigo del Trabajo",
+    "unit_topic": "Identificacion y publicacion",
+    "chunk_kind": "preamble",
+    "text": "Codigo del Trabajo de la Republica de Nicaragua, con datos de publicacion y encabezado institucional."
+  }
+]

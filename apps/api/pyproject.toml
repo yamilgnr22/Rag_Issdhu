@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-issdhu-api"
+version = "0.1.0"
+description = "Bootstrap API for Rag_Issdhu"
+requires-python = ">=3.12"
+dependencies = [
+  "beautifulsoup4>=4.12.0,<5.0.0",
+  "boto3>=1.35.0,<2.0.0",
+  "fastapi>=0.115.0,<1.0.0",
+  "httpx>=0.28.0,<1.0.0",
+  "openpyxl>=3.1.0,<4.0.0",
+  "pdfplumber>=0.11.0,<1.0.0",
+  "pydantic>=2.9.0,<3.0.0",
+  "pydantic-settings>=2.5.0,<3.0.0",
+  "python-docx>=1.1.0,<2.0.0",
+  "python-multipart>=0.0.18,<1.0.0",
+  "scikit-learn>=1.5.0,<2.0.0",
+  "sqlalchemy>=2.0.0,<3.0.0",
+  "uvicorn[standard]>=0.30.0,<1.0.0"
+]
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]

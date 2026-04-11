@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "citation.json",
+  "title": "Citation",
+  "type": "object",
+  "required": ["label", "document_id", "version_id", "chunk_id"],
+  "properties": {
+    "label": { "type": "string" },
+    "document_id": { "type": "string" },
+    "version_id": { "type": "string" },
+    "chunk_id": { "type": "string" }
+  }
+}
+

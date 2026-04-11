@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "query_request.json",
+  "title": "QueryRequest",
+  "type": "object",
+  "required": ["question", "user_identity"],
+  "properties": {
+    "question": { "type": "string" },
+    "user_identity": { "type": "string" },
+    "filters": { "type": "object" },
+    "conversation_context": { "type": "array", "items": { "type": "object" } }
+  }
+}
+

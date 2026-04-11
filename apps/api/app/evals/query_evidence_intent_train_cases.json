@@ -1,0 +1,82 @@
+[
+  {
+    "case_id": "intent_substantive_art25",
+    "intent": "substantive",
+    "question": "Que dice el Art. 25 de la Ley 822 sobre retener y declarar el impuesto?"
+  },
+  {
+    "case_id": "intent_substantive_niif_ppe",
+    "intent": "substantive",
+    "question": "Cual es la seccion de la NIIF que aborda la propiedad planta y equipo?"
+  },
+  {
+    "case_id": "intent_substantive_niif_ifrs11",
+    "intent": "substantive",
+    "question": "Que seccion de la NIIF aborda instrumentos financieros?"
+  },
+  {
+    "case_id": "intent_substantive_gafi24",
+    "intent": "substantive",
+    "question": "Que exige la Recomendacion 24 del GAFI sobre beneficiario final?"
+  },
+  {
+    "case_id": "intent_substantive_codigo45",
+    "intent": "substantive",
+    "question": "Como calcula el Codigo del Trabajo la indemnizacion por despido sin causa justificada?"
+  },
+  {
+    "case_id": "intent_substantive_niif_cualidades",
+    "intent": "substantive",
+    "question": "Que apartados de la NIIF para las PYMES explican las cualidades de la informacion financiera util?"
+  },
+  {
+    "case_id": "intent_reference_tabla_fuentes",
+    "intent": "reference",
+    "question": "Que contiene la tabla de fuentes de la NIIF para las PYMES?"
+  },
+  {
+    "case_id": "intent_reference_indice",
+    "intent": "reference",
+    "question": "Que muestra el indice general de la NIIF para las PYMES?"
+  },
+  {
+    "case_id": "intent_reference_glosario",
+    "intent": "reference",
+    "question": "Que incluye el glosario de terminos de la NIIF para las PYMES?"
+  },
+  {
+    "case_id": "intent_reference_correspondencia",
+    "intent": "reference",
+    "question": "Donde aparece la correspondencia entre secciones de la NIIF para las PYMES y las NIC?"
+  },
+  {
+    "case_id": "intent_reference_contenido_gafi",
+    "intent": "reference",
+    "question": "Que tabla o contenido resume las recomendaciones del GAFI por bloques tematicos?"
+  },
+  {
+    "case_id": "intent_mixed_estructura_niif",
+    "intent": "mixed",
+    "question": "Como se estructura la NIIF para las PYMES?"
+  },
+  {
+    "case_id": "intent_mixed_bloques_niif",
+    "intent": "mixed",
+    "question": "Cuales son los grandes bloques tematicos que cubre la NIIF para las PYMES?"
+  },
+  {
+    "case_id": "intent_mixed_panorama_gafi",
+    "intent": "mixed",
+    "question": "Que panorama general presenta el documento del GAFI?"
+  },
+  {
+    "case_id": "intent_mixed_estructura_ley822",
+    "intent": "mixed",
+    "question": "Como organiza la Ley 822 el tratamiento de las distintas categorias de renta?"
+  },
+  {
+    "case_id": "intent_mixed_secciones_principales",
+    "intent": "mixed",
+    "question": "Cuales son las secciones principales del documento?"
+  }
+]

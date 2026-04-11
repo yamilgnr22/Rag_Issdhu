@@ -1,0 +1,21 @@
+{
+  "processed_versions": 1,
+  "indexed_versions": 1,
+  "skipped_versions": 0,
+  "failed_versions": 0,
+  "indexed_chunks": 58,
+  "qdrant_collection": "rag_chunks_v1",
+  "opensearch_index": "rag_chunks_v1",
+  "embedding_source": "cloud_openai",
+  "results": [
+    {
+      "version_id": "v_123456789abc",
+      "document_id": "doc_123456789abc",
+      "document_class": "general_document",
+      "document_family": "general",
+      "status": "indexed",
+      "chunks_indexed": 58,
+      "reason": null
+    }
+  ]
+}

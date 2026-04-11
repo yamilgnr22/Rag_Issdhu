@@ -1,0 +1,9 @@
+{
+  "question": "Como se relaciona el lavado de dinero con el GAFI?",
+  "user_identity": "analyst@example.com",
+  "filters": {
+    "language": "es"
+  },
+  "conversation_context": []
+}
+

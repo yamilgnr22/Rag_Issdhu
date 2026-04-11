@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "document.json",
+  "title": "Document",
+  "type": "object",
+  "required": [
+    "document_id",
+    "source",
+    "source_authority",
+    "mime_type",
+    "language",
+    "acl",
+    "created_at"
+  ],
+  "properties": {
+    "document_id": { "type": "string" },
+    "source": { "type": "string" },
+    "source_authority": { "type": "string", "enum": ["primary", "secondary", "derived"] },
+    "mime_type": { "type": "string" },
+    "language": { "type": "string" },
+    "acl": {
+      "type": "object",
+      "required": ["users", "groups"],
+      "properties": {
+        "users": { "type": "array", "items": { "type": "string" } },
+        "groups": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}
+

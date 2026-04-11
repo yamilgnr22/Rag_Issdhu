@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ingestion_response.json",
+  "title": "IngestionResponse",
+  "type": "object",
+  "required": [
+    "document",
+    "version",
+    "storage_uri",
+    "extraction_status",
+    "review_required",
+    "blocks_count",
+    "text_length",
+    "document_class",
+    "document_family",
+    "chunking_strategy",
+    "classification_source",
+    "classification_confidence"
+  ],
+  "properties": {
+    "document": { "$ref": "document.json" },
+    "version": { "$ref": "version.json" },
+    "storage_uri": { "type": "string" },
+    "artifact_uri": { "type": ["string", "null"] },
+    "extraction_status": { "type": "string", "enum": ["extracted", "manual_review", "failed"] },
+    "review_required": { "type": "boolean" },
+    "review_reason": { "type": ["string", "null"] },
+    "blocks_count": { "type": "integer", "minimum": 0 },
+    "text_length": { "type": "integer", "minimum": 0 },
+    "document_class": {
+      "type": "string",
+      "enum": ["legal_normative", "technical_standard", "general_document"]
+    },
+    "document_family": {
+      "type": "string",
+      "enum": ["normative", "general"]
+    },
+    "chunking_strategy": {
+      "type": "string",
+      "enum": ["normative_hierarchical", "technical_structural", "generic_structural", "generic_freeform"]
+    },
+    "classification_source": {
+      "type": "string",
+      "enum": ["deterministic", "llm_fallback", "llm_cloud", "llm_local", "safe_fallback"]
+    },
+    "classification_confidence": { "type": "number" },
+    "classification_reason_short": { "type": ["string", "null"] }
+  }
+}

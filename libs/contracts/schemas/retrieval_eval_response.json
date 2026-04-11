@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "retrieval_eval_response.json",
+  "title": "RetrievalEvalResponse",
+  "type": "object",
+  "required": [
+    "fixture_path",
+    "total_cases",
+    "passed_cases",
+    "router_accuracy",
+    "hit_at_1",
+    "hit_at_3",
+    "hit_at_5",
+    "mean_reciprocal_rank",
+    "citation_precision_at_3",
+    "no_result_rate",
+    "by_suite",
+    "results"
+  ],
+  "properties": {
+    "fixture_path": { "type": "string" },
+    "total_cases": { "type": "integer" },
+    "passed_cases": { "type": "integer" },
+    "router_accuracy": { "type": "number" },
+    "hit_at_1": { "type": "number" },
+    "hit_at_3": { "type": "number" },
+    "hit_at_5": { "type": "number" },
+    "mean_reciprocal_rank": { "type": "number" },
+    "citation_precision_at_3": { "type": "number" },
+    "no_result_rate": { "type": "number" },
+    "by_suite": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["suite_id", "total_cases", "passed_cases"],
+        "properties": {
+          "suite_id": { "type": "string" },
+          "total_cases": { "type": "integer" },
+          "passed_cases": { "type": "integer" },
+          "router_accuracy": { "type": "number" },
+          "hit_at_1": { "type": "number" },
+          "hit_at_3": { "type": "number" },
+          "hit_at_5": { "type": "number" },
+          "mean_reciprocal_rank": { "type": "number" },
+          "citation_precision_at_3": { "type": "number" },
+          "no_result_rate": { "type": "number" }
+        }
+      }
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["case_id", "suite_id", "question", "passed"],
+        "properties": {
+          "case_id": { "type": "string" },
+          "suite_id": { "type": "string" },
+          "question": { "type": "string" },
+          "expected_document_class": { "type": "string" },
+          "expected_document_family": { "type": "string" },
+          "expected_version_id": { "type": "string" },
+          "expected_document_id": { "type": "string" },
+          "router_query_type": { "type": "string" },
+          "router_ok": { "type": "boolean" },
+          "hit_at_1": { "type": "boolean" },
+          "hit_at_3": { "type": "boolean" },
+          "hit_at_5": { "type": "boolean" },
+          "reciprocal_rank": { "type": "number" },
+          "citation_precision_at_3": { "type": "number" },
+          "required_terms_ok": { "type": "boolean" },
+          "optional_terms_ok": { "type": "boolean" },
+          "passed": { "type": "boolean" },
+          "fallback_reason": { "type": ["string", "null"] },
+          "decision_trace": { "type": "array", "items": { "type": "string" } },
+          "top_hits": { "type": "array", "items": { "type": "object" } },
+          "notes": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

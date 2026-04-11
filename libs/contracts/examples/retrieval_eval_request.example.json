@@ -1,0 +1,5 @@
+{
+  "suite_ids": ["ley_822", "niif_pymes", "gafi_2025"],
+  "include_passed": false,
+  "user_identity": "eval@local"
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "retrieval_eval_request.json",
+  "title": "RetrievalEvalRequest",
+  "type": "object",
+  "properties": {
+    "suite_ids": { "type": "array", "items": { "type": "string" } },
+    "case_ids": { "type": "array", "items": { "type": "string" } },
+    "fixture_path": { "type": "string" },
+    "include_passed": { "type": "boolean" },
+    "user_identity": { "type": "string" }
+  }
+}

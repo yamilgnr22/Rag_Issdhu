@@ -1,0 +1,784 @@
+{
+  "cases": [
+    {
+      "case_id": "ley822_art24_retenciones_definitivas",
+      "suite_id": "ley_822",
+      "question": "Que establece el Art. 24 de la Ley 822 sobre retenciones definitivas?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["Arto. 24"],
+        "should_contain_any": ["retenciones definitivas", "dietas", "no residentes"]
+      }
+    },
+    {
+      "case_id": "ley822_art25_retener_liquidar_declarar_enterar",
+      "suite_id": "ley_822",
+      "question": "Que obliga el Art. 25 de la Ley 822 respecto a retener, liquidar, declarar y enterar el impuesto?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["Arto. 25"],
+        "should_contain_any": ["retener", "liquidar", "declarar", "enterar"]
+      }
+    },
+    {
+      "case_id": "ley822_art27_constancia_retenciones",
+      "suite_id": "ley_822",
+      "question": "Que dice el Art. 27 de la Ley 822 sobre la constancia de retenciones?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["Arto. 27"],
+        "should_contain_any": ["constancia", "retenciones"]
+      }
+    },
+    {
+      "case_id": "ley822_art29_dos_o_mas_empleadores",
+      "suite_id": "ley_822",
+      "question": "Que dispone el Art. 29 sobre la obligacion de liquidar, declarar y pagar cuando hay dos o mas empleadores?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["Arto. 29"],
+        "should_contain_any": ["dos o mas empleadores", "declarar", "pagar"]
+      }
+    },
+    {
+      "case_id": "ley822_art20_base_imponible_rentas_trabajo",
+      "suite_id": "ley_822",
+      "question": "Que senala el Art. 20 sobre la base imponible del IR de rentas del trabajo?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["Arto. 20"],
+        "should_contain_any": ["base imponible", "rentas del trabajo"]
+      }
+    },
+    {
+      "case_id": "ley822_art21_deducciones_autorizadas",
+      "suite_id": "ley_822",
+      "question": "Que deducciones autoriza el Art. 21 de la Ley 822?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["Arto. 21"],
+        "should_contain_any": ["deducciones autorizadas", "seguridad social", "fondos de ahorro"]
+      }
+    },
+    {
+      "case_id": "ley822_parafraseada_dietas_no_residentes",
+      "suite_id": "ley_822",
+      "question": "Como trata la Ley 822 las dietas y a los contribuyentes no residentes en materia de retencion?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["dietas", "no residentes"],
+        "should_contain_any": ["retenciones definitivas", "Arto. 24"]
+      }
+    },
+    {
+      "case_id": "ley822_empleador_ir_durante_anio",
+      "suite_id": "ley_822",
+      "question": "Que debe hacer el empleador con el IR laboral durante el ano, segun la Ley 822?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["retener"],
+        "should_contain_any": ["liquidar", "declarar", "enterar", "Arto. 25"]
+      }
+    },
+    {
+      "case_id": "ley822_documento_cierre_periodo",
+      "suite_id": "ley_822",
+      "question": "Que documento debe entregar el retenedor al trabajador al cierre del periodo fiscal?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["constancia"],
+        "should_contain_any": ["retenciones", "Arto. 27"]
+      }
+    },
+    {
+      "case_id": "ley822_varios_empleadores_declaracion_anual",
+      "suite_id": "ley_822",
+      "question": "Cuando un asalariado con varios empleadores queda obligado a presentar declaracion anual?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["dos o mas empleadores"],
+        "should_contain_any": ["declarar", "pagar", "Arto. 29"]
+      }
+    },
+    {
+      "case_id": "ley822_tarifa_o_gestion_retenciones",
+      "suite_id": "ley_822",
+      "question": "Que parte de la Ley 822 regula realmente las retenciones del trabajo: la tarifa o la gestion del impuesto?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["retenciones"],
+        "should_contain_any": ["Arto. 24", "Arto. 25", "Arto. 27"]
+      }
+    },
+    {
+      "case_id": "ley822_no_residentes_ubicacion",
+      "suite_id": "ley_822",
+      "question": "Donde se regula el tratamiento de las rentas del trabajo de no residentes?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["no residentes", "rentas del trabajo"],
+        "should_contain_any": ["Arto. 18", "Arto. 24", "Arto. 12", "contribuyentes no residentes"]
+      }
+    },
+    {
+      "case_id": "niif_seccion11_general",
+      "suite_id": "niif_pymes",
+      "question": "Que establece la Seccion 11 de la NIIF para las PYMES?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["Seccion 11"],
+        "should_contain_any": ["instrumentos financieros basicos", "costo amortizado"]
+      }
+    },
+    {
+      "case_id": "niif_seccion11_vs_12",
+      "suite_id": "niif_pymes",
+      "question": "Que diferencia hace la NIIF para las PYMES entre la Seccion 11 y la Seccion 12?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Seccion 11", "Seccion 12"],
+        "should_contain_any": ["instrumentos financieros basicos", "otros temas relacionados"]
+      }
+    },
+    {
+      "case_id": "niif_modelo_instrumentos_basicos",
+      "suite_id": "niif_pymes",
+      "question": "Que modelo exige la Seccion 11 para los instrumentos financieros basicos?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Seccion 11"],
+        "should_contain_any": ["costo amortizado", "instrumentos financieros basicos"]
+      }
+    },
+    {
+      "case_id": "niif_113_instrumento_financiero",
+      "suite_id": "niif_pymes",
+      "question": "Que es un instrumento financiero segun el parrafo 11.3?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["11.3"],
+        "should_contain_any": ["activo financiero", "pasivo financiero", "instrumento de patrimonio"]
+      }
+    },
+    {
+      "case_id": "niif_112_politica_contable_nic39",
+      "suite_id": "niif_pymes",
+      "question": "Que alternativa de politica contable permite el parrafo 11.2?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["11.2"],
+        "should_contain_any": ["NIC 39", "Secciones 11 y 12"]
+      }
+    },
+    {
+      "case_id": "niif_tipos_dentro_alcance",
+      "suite_id": "niif_pymes",
+      "question": "Que tipos de instrumentos financieros quedan normalmente dentro del alcance de la Seccion 11?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Seccion 11"],
+        "should_contain_any": ["efectivo", "cuentas por cobrar", "prestamo", "instrumentos financieros basicos"]
+      }
+    },
+    {
+      "case_id": "niif_parafraseada_basicos_vs_complejos",
+      "suite_id": "niif_pymes",
+      "question": "Como separa la NIIF para las PYMES los instrumentos basicos de los instrumentos mas complejos?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Seccion 11", "Seccion 12"],
+        "should_contain_any": ["instrumentos basicos", "otros temas relacionados"]
+      }
+    },
+    {
+      "case_id": "niif_parafraseada_post_reconocimiento",
+      "suite_id": "niif_pymes",
+      "question": "Que tratamiento general da la NIIF para las PYMES a los instrumentos financieros basicos despues del reconocimiento inicial?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["costo amortizado"],
+        "should_contain_any": ["medicion posterior", "valor razonable"]
+      }
+    },
+    {
+      "case_id": "niif_cuando_apoyarse_en_nic39",
+      "suite_id": "niif_pymes",
+      "question": "Cuando una entidad podria apoyarse en NIC 39 en vez de usar por completo las Secciones 11 y 12?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["NIC 39"],
+        "should_contain_any": ["Secciones 11 y 12", "politica contable", "alternativa"]
+      }
+    },
+    {
+      "case_id": "niif_logica_contable_general",
+      "suite_id": "niif_pymes",
+      "question": "Cual es la logica contable general de la Seccion 11 para activos y pasivos financieros basicos?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Seccion 11"],
+        "should_contain_any": ["activo financiero", "pasivo financiero", "costo amortizado"]
+      }
+    },
+    {
+      "case_id": "niif_ambigua_una_sola_seccion",
+      "suite_id": "niif_pymes",
+      "question": "La NIIF para las PYMES maneja todos los instrumentos financieros en una sola seccion?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Seccion 11", "Seccion 12"],
+        "should_contain_any": ["instrumentos financieros basicos", "otros temas relacionados"]
+      }
+    },
+    {
+      "case_id": "niif_solo_basicos_mirar_12",
+      "suite_id": "niif_pymes",
+      "question": "Si una entidad solo tiene instrumentos financieros basicos, igual debe mirar la Seccion 12?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Seccion 11", "Seccion 12"],
+        "should_contain_any": ["instrumentos financieros basicos", "otros temas relacionados"]
+      }
+    },
+    {
+      "case_id": "niif_reformulacion_basicos_vs_complejos",
+      "suite_id": "niif_pymes",
+      "question": "Que seccion de la NIIF para las PYMES usaria una PYME para instrumentos basicos y cual para temas mas complejos?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Seccion 11", "Seccion 12"],
+        "should_contain_any": ["instrumentos basicos", "otros temas relacionados"]
+      }
+    },
+    {
+      "case_id": "niif_reformulacion_nic39_no_siempre",
+      "suite_id": "niif_pymes",
+      "question": "La NIIF para las PYMES obliga siempre a irse por NIC 39 para medicion?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["NIC 39"],
+        "should_contain_any": ["Secciones 11 y 12", "alternativa", "politica contable"]
+      }
+    },
+    {
+      "case_id": "gafi_r1_evaluacion_riesgos",
+      "suite_id": "gafi_2025",
+      "question": "Que exige la Recomendacion 1 del GAFI sobre evaluacion de riesgos?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["Evaluacion de riesgos"],
+        "should_contain_any": ["lavado de activos", "financiamiento del terrorismo", "Recomendacion 1"]
+      }
+    },
+    {
+      "case_id": "gafi_r1_enfoque_basado_en_riesgo",
+      "suite_id": "gafi_2025",
+      "question": "Que exige la Recomendacion 1 sobre la aplicacion del enfoque basado en riesgo?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["enfoque basado en riesgo"],
+        "should_contain_any": ["mitiguen eficazmente los riesgos", "asignacion eficaz de recursos", "Recomendacion 1"]
+      }
+    },
+    {
+      "case_id": "gafi_r1_proliferacion",
+      "suite_id": "gafi_2025",
+      "question": "Que dice la Recomendacion 1 sobre riesgos de financiamiento de la proliferacion?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["financiamiento de la proliferacion"],
+        "should_contain_any": ["sanciones financieras dirigidas", "Recomendacion 7"]
+      }
+    },
+    {
+      "case_id": "gafi_r1_instituciones_y_apnfd",
+      "suite_id": "gafi_2025",
+      "question": "Que deben hacer las instituciones financieras y APNFD segun la Recomendacion 1?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["instituciones financieras", "APNFD"],
+        "should_contain_any": ["identifiquen", "evaluen", "mitigar sus riesgos"]
+      }
+    },
+    {
+      "case_id": "gafi_anexo_cumplimiento_tecnico_r1",
+      "suite_id": "gafi_2025",
+      "question": "Que explica el Anexo de Cumplimiento Tecnico respecto de la Recomendacion 1?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["cumplimiento tecnico", "Recomendacion 1"],
+        "should_contain_any": ["Metodologia", "Nota para los evaluadores", "criterios"]
+      }
+    },
+    {
+      "case_id": "gafi_anexo_i_guias",
+      "suite_id": "gafi_2025",
+      "question": "Que indica el Anexo I sobre el valor de las guias del GAFI dentro de la evaluacion?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["guias"],
+        "should_contain_any": []
+      }
+    },
+    {
+      "case_id": "gafi_parafraseada_riesgos_altos_bajos",
+      "suite_id": "gafi_2025",
+      "question": "Como deben actuar los paises cuando identifican riesgos altos y riesgos bajos segun el estandar GAFI?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["riesgos"],
+        "should_contain_any": ["riesgos mayores", "riesgos menores", "medidas simplificadas"]
+      }
+    },
+    {
+      "case_id": "gafi_parafraseada_regimen_ala_cft",
+      "suite_id": "gafi_2025",
+      "question": "Que papel tiene el enfoque basado en riesgo dentro de todo el regimen ALA/CFT?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["ALA/CFT"],
+        "should_contain_any": ["enfoque basado en riesgo", "fundamento esencial", "asignacion eficaz de recursos"]
+      }
+    },
+    {
+      "case_id": "gafi_metodologia_criterio_por_criterio",
+      "suite_id": "gafi_2025",
+      "question": "Que parte del documento GAFI sirve para evaluar tecnicamente cada recomendacion criterio por criterio?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Metodologia"],
+        "should_contain_any": ["cumplimiento tecnico", "Nota para los evaluadores", "criterios"]
+      }
+    },
+    {
+      "case_id": "gafi_guias_obligatorias_cumplimiento_tecnico",
+      "suite_id": "gafi_2025",
+      "question": "Las guias del GAFI son obligatorias para evaluar cumplimiento tecnico?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["cumplimiento tecnico"],
+        "should_contain_any": ["Anexo I", "guias", "documentos guia del GAFI"]
+      }
+    },
+    {
+      "case_id": "gafi_ambigua_r1_recomendacion_metodologia",
+      "suite_id": "gafi_2025",
+      "question": "Donde deberia ir una pregunta sobre R.1: a Recomendaciones, a Metodologia o a ambos?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Recomendacion 1", "Metodologia"],
+        "should_contain_any": ["cumplimiento tecnico", "Nota para los evaluadores"]
+      }
+    },
+    {
+      "case_id": "gafi_ambigua_que_exige_vs_como_se_evalua",
+      "suite_id": "gafi_2025",
+      "question": "Que diferencia hay entre preguntar que exige la R.1 y preguntar como se evalua tecnicamente la R.1?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Recomendacion 1"],
+        "should_contain_any": ["Metodologia", "Nota para los evaluadores", "cumplimiento tecnico"]
+      }
+    },
+    {
+      "case_id": "confusion_niif_vs_gafi_costo_vs_riesgo",
+      "suite_id": "technical_confusion",
+      "question": "Que documento habla de costo amortizado y cual de enfoque basado en riesgo?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "targets": [
+          {
+            "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+            "document_class": "technical_standard"
+          },
+          {
+            "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+            "document_class": "technical_standard"
+          }
+        ],
+        "target_match_mode": "all",
+        "pass_rank": 8,
+        "must_contain_all": ["costo amortizado", "enfoque basado en riesgo"],
+        "should_contain_any": ["Seccion 11", "Recomendacion 1", "GAFI", "NIIF"]
+      }
+    },
+    {
+      "case_id": "confusion_niif_vs_gafi_instrumentos_vs_laft",
+      "suite_id": "technical_confusion",
+      "question": "Que norma trata instrumentos financieros y cual trata lavado de activos y financiamiento del terrorismo?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "targets": [
+          {
+            "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+            "document_class": "technical_standard"
+          },
+          {
+            "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+            "document_class": "technical_standard"
+          }
+        ],
+        "target_match_mode": "all",
+        "pass_rank": 8,
+        "must_contain_all": ["instrumentos financieros", "lavado de activos"],
+        "should_contain_any": ["financiamiento del terrorismo", "GAFI", "NIIF"]
+      }
+    },
+    {
+      "case_id": "confusion_niif_vs_gafi_secciones_vs_recomendaciones",
+      "suite_id": "technical_confusion",
+      "question": "Que documento usa secciones y cual usa recomendaciones?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "targets": [
+          {
+            "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+            "document_class": "technical_standard"
+          },
+          {
+            "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+            "document_class": "technical_standard"
+          }
+        ],
+        "target_match_mode": "all",
+        "pass_rank": 8,
+        "must_contain_all": ["Seccion 11", "Recomendacion 1"],
+        "should_contain_any": ["instrumentos financieros basicos", "evaluacion de riesgos"]
+      }
+    },
+    {
+      "case_id": "confusion_niif_vs_gafi_anexo_vs_secciones",
+      "suite_id": "technical_confusion",
+      "question": "Que documento tiene un anexo de cumplimiento tecnico y cual organiza el contenido por secciones?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "targets": [
+          {
+            "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+            "document_class": "technical_standard"
+          },
+          {
+            "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+            "document_class": "technical_standard"
+          }
+        ],
+        "target_match_mode": "all",
+        "pass_rank": 8,
+        "must_contain_all": ["cumplimiento tecnico", "Seccion 11"],
+        "should_contain_any": ["Anexo I", "instrumentos financieros basicos", "Metodologia"]
+      }
+    },
+    {
+      "case_id": "acta_chontales_acuerdo",
+      "suite_id": "actas_consejo",
+      "question": "Que acuerdo se tomo sobre la oferta de compra de la propiedad de Chontales?",
+      "expectation": {
+        "document_class": "general_document",
+        "document_family": "general",
+        "target": {
+          "storage_uri_contains": "208 Ene 26.pdf",
+          "document_class": "general_document"
+        },
+        "pass_rank": 3,
+        "must_contain_all": ["Chontales"],
+        "should_contain_any": ["Acuerdo", "oferta de compra", "autorizar la venta"]
+      }
+    },
+    {
+      "case_id": "acta_ampp_financiamiento",
+      "suite_id": "actas_consejo",
+      "question": "Que se acordo sobre el financiamiento de atencion medica para pensionado (AMPP)?",
+      "expectation": {
+        "document_class": "general_document",
+        "document_family": "general",
+        "target": {
+          "storage_uri_contains": "202 Oct 24.pdf",
+          "document_class": "general_document"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["AMPP"],
+        "should_contain_any": ["Acuerdo", "financiamiento", "atencion medica"]
+      }
+    },
+    {
+      "case_id": "acta_aporte_laboral_pav",
+      "suite_id": "actas_consejo",
+      "question": "Que acuerdo se tomo sobre el ajuste del aporte laboral activo y en el PAV?",
+      "expectation": {
+        "document_class": "general_document",
+        "document_family": "general",
+        "target": {
+          "storage_uri_contains": "202 Oct 24.pdf",
+          "document_class": "general_document"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["aporte laboral"],
+        "should_contain_any": ["PAV", "Acuerdo", "Cuota laboral"]
+      }
+    },
+    {
+      "case_id": "acta_enatrel_compensacion",
+      "suite_id": "actas_consejo",
+      "question": "Que aprobo el consejo sobre la compensacion financiera con ENATREL?",
+      "expectation": {
+        "document_class": "general_document",
+        "document_family": "general",
+        "target": {
+          "storage_uri_contains": "208 Ene 26.pdf",
+          "document_class": "general_document"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["ENATREL"],
+        "should_contain_any": ["compensacion", "Acuerdo"]
+      }
+    }
+  ]
+}

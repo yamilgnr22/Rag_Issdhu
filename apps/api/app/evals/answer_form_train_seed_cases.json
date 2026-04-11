@@ -1,0 +1,273 @@
+{
+  "version": 1,
+  "purpose": "Seed template for answer_form and canonical unit selection training labels.",
+  "cases": [
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_focal_ley822_deducciones_rentas_trabajo",
+      "strategy": "focal",
+      "question": "Que deducciones autoriza la Ley 822 sobre las rentas del trabajo para educacion, salud, servicios profesionales y aportes previsionales?",
+      "suggested_answer_form": "rule_summary",
+      "suggested_primary_unit": "Art. 21",
+      "suggested_expected_units": [
+        "Art. 21"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Capitulo II > Seccion III > Art. 21"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_focal_codigo_trabajo_indemnizacion_despido",
+      "strategy": "focal",
+      "question": "Como calcula el Codigo del Trabajo la indemnizacion por despido sin causa justificada en contratos por tiempo indeterminado?",
+      "suggested_answer_form": "rule_summary",
+      "suggested_primary_unit": "Art. 45",
+      "suggested_expected_units": [
+        "Art. 45"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Capitulo VI > Art. 45"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_focal_niif_obligacion_publica_rendir_cuentas",
+      "strategy": "focal",
+      "question": "Cuando una entidad tiene obligacion publica de rendir cuentas segun la NIIF para las PYMES?",
+      "suggested_answer_form": "rule_summary",
+      "suggested_primary_unit": "Seccion 1 > 1.3",
+      "suggested_expected_units": [
+        "Seccion 1 > 1.3"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Seccion 1 > 1.3"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_focal_gafi_recomendacion24_beneficiario_final",
+      "strategy": "focal",
+      "question": "Que exige la Recomendacion 24 del GAFI sobre transparencia y beneficiario final de las personas juridicas?",
+      "suggested_answer_form": "rule_summary",
+      "suggested_primary_unit": "Recomendacion 24",
+      "suggested_expected_units": [
+        "Recomendacion 24"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Recomendacion 24"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_focal_gafi_recomendacion20_ros",
+      "strategy": "focal",
+      "question": "Que debe hacer una institucion financiera si sospecha que fondos estan relacionados con actividad criminal o financiamiento del terrorismo?",
+      "suggested_answer_form": "rule_summary",
+      "suggested_primary_unit": "Recomendacion 20",
+      "suggested_expected_units": [
+        "Recomendacion 20"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Recomendacion 20"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_multi_branch_ley822_rentas_trabajo_bloque",
+      "strategy": "multi_branch",
+      "question": "Que articulos de la Ley 822 regulan de forma conjunta las rentas del trabajo desde las exenciones hasta la declaracion y pago?",
+      "suggested_answer_form": "unit_set",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [
+        "Art. 19",
+        "Art. 21",
+        "Art. 23",
+        "Art. 25",
+        "Art. 29"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Capitulo II > Secciones II-V"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_multi_branch_codigo_trabajo_suspension_individual_colectiva",
+      "strategy": "multi_branch",
+      "question": "Que disposiciones del Codigo del Trabajo tratan sobre la suspension individual y colectiva de la relacion laboral?",
+      "suggested_answer_form": "unit_set",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [
+        "Art. 35",
+        "Art. 36",
+        "Art. 37",
+        "Art. 38",
+        "Art. 39"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Capitulo V > Arts. 35-39"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_multi_branch_niif_presentacion_estados_y_notas",
+      "strategy": "multi_branch",
+      "question": "Que secciones de la NIIF para las PYMES regulan la presentacion de los estados financieros basicos y las notas?",
+      "suggested_answer_form": "unit_set",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [
+        "Seccion 3",
+        "Seccion 4",
+        "Seccion 5",
+        "Seccion 6",
+        "Seccion 7",
+        "Seccion 8"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Secciones 3-8"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_multi_branch_gafi_ddc_registros_apnfd",
+      "strategy": "multi_branch",
+      "question": "Que recomendaciones del GAFI cubren la debida diligencia, el mantenimiento de registros y las medidas para APNFD?",
+      "suggested_answer_form": "unit_set",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [
+        "Recomendacion 10",
+        "Recomendacion 11",
+        "Recomendacion 22",
+        "Recomendacion 23"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Recomendaciones 10-11 y 22-23"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_multi_branch_ley822_retencion_constancia_declaracion_responsabilidad",
+      "strategy": "multi_branch",
+      "question": "Que articulos de la Ley 822 regulan de forma conjunta la retencion, la constancia, la declaracion anual y la responsabilidad solidaria en las rentas del trabajo?",
+      "suggested_answer_form": "unit_set",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [
+        "Art. 25",
+        "Art. 26",
+        "Art. 27",
+        "Art. 28",
+        "Art. 29"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Capitulo II > Seccion V > Arts. 25-29"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_multi_branch_codigo_trabajo_terminacion_renuncia_indemnizacion",
+      "strategy": "multi_branch",
+      "question": "Que articulos del Codigo del Trabajo se relacionan con la terminacion del contrato, la renuncia, la indemnizacion, el reintegro y el despido con causa?",
+      "suggested_answer_form": "unit_set",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [
+        "Art. 40",
+        "Art. 43",
+        "Art. 44",
+        "Art. 45",
+        "Art. 46",
+        "Art. 48"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Titulo II > Capitulo VI > Arts. 40-48"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_global_ley822_temas_principales_rentas_trabajo",
+      "strategy": "global",
+      "question": "Cuales son los temas principales que regula la Ley 822 sobre las rentas del trabajo?",
+      "suggested_answer_form": "global_summary",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Capitulo II"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_global_codigo_trabajo_enfoque_proteccion_laboral",
+      "strategy": "global",
+      "question": "Que enfoque general adopta el Codigo del Trabajo respecto a la proteccion del trabajador y la regulacion de la relacion laboral?",
+      "suggested_answer_form": "global_summary",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Titulo Preliminar + Titulo I + Titulo II + Titulo III"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_global_niif_componentes_principios_generales",
+      "strategy": "global",
+      "question": "Cuales son los componentes y principios generales que estructuran la NIIF para las PYMES?",
+      "suggested_answer_form": "global_summary",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Prologo + Secciones 1-3"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_train_cases.json",
+      "case_id": "planner_global_gafi_bloques_tematicos",
+      "strategy": "global",
+      "question": "Cuales son los grandes bloques tematicos de las Recomendaciones del GAFI y su metodologia?",
+      "suggested_answer_form": "global_summary",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Contenido + Introduccion + Recomendaciones"
+    },
+    {
+      "source_fixture": "manual_query",
+      "case_id": "manual_direct_unit_niif_propiedad_planta_equipo",
+      "strategy": "focal",
+      "question": "Cual es la seccion de la NIIF que aborda la propiedad planta y equipo?",
+      "suggested_answer_form": "direct_unit",
+      "suggested_primary_unit": "Seccion 17",
+      "suggested_expected_units": [
+        "Seccion 17"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "Recent live query; expected answer is the canonical section identity."
+    },
+    {
+      "source_fixture": "manual_query",
+      "case_id": "manual_unit_set_niif_instrumentos_financieros",
+      "strategy": "multi_branch",
+      "question": "Cual es la seccion de la NIIF que aborda instrumentos financieros?",
+      "suggested_answer_form": "unit_set",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [
+        "Seccion 11",
+        "Seccion 12"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "Recent live query; expected answer is a small set of canonical sections."
+    },
+    {
+      "source_fixture": "manual_query",
+      "case_id": "manual_unit_set_codigo_indemnizacion_laboral",
+      "strategy": "multi_branch",
+      "question": "Cuales son los articulos del codigo de trabajo relacionados con la indemnizacion laboral?",
+      "suggested_answer_form": "unit_set",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [
+        "Art. 45",
+        "Art. 46",
+        "Art. 48"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "Recent live query; review this carefully because it is a key business example."
+    },
+    {
+      "source_fixture": "manual_query",
+      "case_id": "manual_direct_unit_codigo_autorizacion_previa_causal_grave",
+      "strategy": "focal",
+      "question": "Cual es el articulo del Codigo del Trabajo sobre la autorizacion previa cuando el empleador invoca una causal grave?",
+      "suggested_answer_form": "direct_unit",
+      "suggested_primary_unit": "Art. 48",
+      "suggested_expected_units": [
+        "Art. 48"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "Manual direct-unit counterpart of the existing rule-summary question."
+    }
+  ]
+}

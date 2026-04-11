@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "chunking_response.json",
+  "title": "ChunkingResponse",
+  "type": "object",
+  "required": [
+    "document_id",
+    "version_id",
+    "chunks_count",
+    "table_chunks_count",
+    "chunk_window",
+    "document_class",
+    "document_family",
+    "chunking_strategy",
+    "classification_source",
+    "classification_confidence"
+  ],
+  "properties": {
+    "document_id": { "type": "string" },
+    "version_id": { "type": "string" },
+    "chunks_count": { "type": "integer" },
+    "table_chunks_count": { "type": "integer" },
+    "artifact_uri": { "type": ["string", "null"] },
+    "document_class": {
+      "type": "string",
+      "enum": ["legal_normative", "technical_standard", "general_document"]
+    },
+    "document_family": {
+      "type": "string",
+      "enum": ["normative", "general"]
+    },
+    "chunking_strategy": {
+      "type": "string",
+      "enum": ["normative_hierarchical", "technical_structural", "generic_structural", "generic_freeform"]
+    },
+    "classification_source": {
+      "type": "string",
+      "enum": ["deterministic", "llm_fallback", "llm_cloud", "llm_local", "safe_fallback"]
+    },
+    "classification_confidence": { "type": "number" },
+    "classification_reason_short": { "type": ["string", "null"] },
+    "chunk_window": {
+      "type": "object",
+      "required": ["target_tokens", "min_tokens", "max_tokens", "overlap_ratio"],
+      "properties": {
+        "target_tokens": { "type": "integer" },
+        "min_tokens": { "type": "integer" },
+        "max_tokens": { "type": "integer" },
+        "overlap_ratio": { "type": "number" }
+      }
+    }
+  }
+}

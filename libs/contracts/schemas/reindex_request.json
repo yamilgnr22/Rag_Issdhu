@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "reindex_request.json",
+  "title": "ReindexRequest",
+  "type": "object",
+  "properties": {
+    "version_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "force": {
+      "type": "boolean",
+      "default": false
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 25
+    },
+    "document_class": {
+      "type": ["string", "null"],
+      "enum": ["legal_normative", "technical_standard", "general_document", null]
+    },
+    "refresh": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

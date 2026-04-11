@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "chunk.json",
+  "title": "Chunk",
+  "type": "object",
+  "required": [
+    "chunk_id",
+    "document_id",
+    "version_id",
+    "block_refs",
+    "text",
+    "metadata",
+    "acl",
+    "index_status"
+  ],
+  "properties": {
+    "chunk_id": { "type": "string" },
+    "document_id": { "type": "string" },
+    "version_id": { "type": "string" },
+    "block_refs": { "type": "array", "items": { "type": "string" } },
+    "text": { "type": "string" },
+    "metadata": { "type": "object" },
+    "acl": {
+      "type": "object",
+      "required": ["users", "groups"],
+      "properties": {
+        "users": { "type": "array", "items": { "type": "string" } },
+        "groups": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "index_status": { "type": "string", "enum": ["pending", "indexed", "error"] }
+  }
+}
+

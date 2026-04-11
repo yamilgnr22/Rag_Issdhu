@@ -1,0 +1,23 @@
+{
+  "answer": "El GAFI define recomendaciones internacionales que orientan los controles contra el lavado de dinero [1].",
+  "citations": [
+    {
+      "label": "[1]",
+      "document_id": "doc_001",
+      "version_id": "v1",
+      "chunk_id": "c_001"
+    }
+  ],
+  "confidence": 0.82,
+  "applied_filters": {
+    "language": "es"
+  },
+  "rewrites_applied": [],
+  "decision_trace": [
+    "retrieval_hybrid",
+    "citations_validated"
+  ],
+  "fallback_reason": null,
+  "source_conflict": false
+}
+

@@ -1,0 +1,260 @@
+{
+  "cases": [
+    {
+      "case_id": "holdout_ley822_ir_laboral_retencion",
+      "suite_id": "ley_822_holdout",
+      "question": "Como se calcula y administra el IR laboral cuando el trabajador recibe ingresos sujetos a retencion?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["retener"],
+        "should_contain_any": ["liquidar", "declarar", "enterar", "rentas del trabajo"]
+      }
+    },
+    {
+      "case_id": "holdout_ley822_retenedor_mes_a_mes",
+      "suite_id": "ley_822_holdout",
+      "question": "En que parte de la Ley 822 se regula lo que el retenedor debe hacer mes a mes con el impuesto del salario?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["retener"],
+        "should_contain_any": ["liquidar", "declarar", "enterar", "Arto. 25"]
+      }
+    },
+    {
+      "case_id": "holdout_ley822_varios_empleadores",
+      "suite_id": "ley_822_holdout",
+      "question": "Si una persona trabaja para varios empleadores, quien termina declarando el impuesto anual?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["dos o mas empleadores"],
+        "should_contain_any": ["declaracion anual", "pagar", "Arto. 29"]
+      }
+    },
+    {
+      "case_id": "holdout_ley822_tarifa_vs_gestion",
+      "suite_id": "ley_822_holdout",
+      "question": "La ley distingue entre tarifa, retencion y obligaciones del retenedor en rentas del trabajo?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["retenciones"],
+        "should_contain_any": ["Arto. 24", "Arto. 25", "Arto. 27"]
+      }
+    },
+    {
+      "case_id": "holdout_niif_instrumentos_simples",
+      "suite_id": "niif_pymes_holdout",
+      "question": "Si una pyme solo tiene cuentas por cobrar, cuentas por pagar y prestamos simples, que parte de la NIIF deberia consultar primero?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Seccion 11"],
+        "should_contain_any": ["instrumentos financieros basicos", "cuentas por cobrar", "prestamos"]
+      }
+    },
+    {
+      "case_id": "holdout_niif_no_siempre_valor_razonable",
+      "suite_id": "niif_pymes_holdout",
+      "question": "La norma para pymes manda medir siempre estos instrumentos a valor razonable?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["costo amortizado"],
+        "should_contain_any": ["valor razonable", "Seccion 11"]
+      }
+    },
+    {
+      "case_id": "holdout_niif_nic39_cuando",
+      "suite_id": "niif_pymes_holdout",
+      "question": "Cuando la NIIF para las PYMES remite a NIC 39 y cuando no hace falta hacerlo?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["NIC 39"],
+        "should_contain_any": ["Secciones 11 y 12", "politica contable", "alternativa"]
+      }
+    },
+    {
+      "case_id": "holdout_niif_sencillos_vs_complejos",
+      "suite_id": "niif_pymes_holdout",
+      "question": "Como separa la norma los instrumentos financieros sencillos de los mas complejos?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Seccion 11", "Seccion 12"],
+        "should_contain_any": ["instrumentos financieros basicos", "otros temas relacionados"]
+      }
+    },
+    {
+      "case_id": "holdout_gafi_antes_simplificar_medidas",
+      "suite_id": "gafi_2025_holdout",
+      "question": "Antes de simplificar medidas o asignar mas recursos, que exige GAFI que haga el pais?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["evaluacion de riesgos"],
+        "should_contain_any": ["enfoque basado en riesgo", "Recomendacion 1"]
+      }
+    },
+    {
+      "case_id": "holdout_gafi_evaluador_recomendacion",
+      "suite_id": "gafi_2025_holdout",
+      "question": "Donde se explica lo que debe hacer un evaluador cuando analiza tecnicamente una recomendacion?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Metodologia"],
+        "should_contain_any": ["cumplimiento tecnico", "Nota para los evaluadores"]
+      }
+    },
+    {
+      "case_id": "holdout_gafi_guias_apoyo",
+      "suite_id": "gafi_2025_holdout",
+      "question": "Las guias del GAFI son obligatorias o sirven como apoyo interpretativo en la evaluacion?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["guias"],
+        "should_contain_any": ["Anexo I", "documentos guia del GAFI"]
+      }
+    },
+    {
+      "case_id": "holdout_gafi_r1_vs_metodologia",
+      "suite_id": "gafi_2025_holdout",
+      "question": "Que diferencia hay entre la regla sustantiva de la R.1 y la parte del documento que ensena a evaluarla?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Recomendacion 1", "Metodologia"],
+        "should_contain_any": ["cumplimiento tecnico"]
+      }
+    },
+    {
+      "case_id": "holdout_acta_chontales_venta",
+      "suite_id": "actas_consejo_holdout",
+      "question": "Que resolvio el consejo sobre vender el terreno en Chontales?",
+      "expectation": {
+        "document_class": "general_document",
+        "document_family": "general",
+        "target": {
+          "storage_uri_contains": "208 Ene 26.pdf",
+          "document_class": "general_document"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["Chontales"],
+        "should_contain_any": ["venta", "oferta", "autorizar"]
+      }
+    },
+    {
+      "case_id": "holdout_acta_enatrel_compensacion",
+      "suite_id": "actas_consejo_holdout",
+      "question": "Que decision tomo el consejo sobre el mecanismo de compensacion con ENATREL?",
+      "expectation": {
+        "document_class": "general_document",
+        "document_family": "general",
+        "target": {
+          "storage_uri_contains": "208 Ene 26.pdf",
+          "document_class": "general_document"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["ENATREL"],
+        "should_contain_any": ["compensacion", "mecanismo", "aprobar"]
+      }
+    },
+    {
+      "case_id": "holdout_acta_aporte_laboral",
+      "suite_id": "actas_consejo_holdout",
+      "question": "Que cambio aprobo el consejo respecto al aporte laboral de afiliados activos y del PAV?",
+      "expectation": {
+        "document_class": "general_document",
+        "document_family": "general",
+        "target": {
+          "storage_uri_contains": "202 Oct 24.pdf",
+          "document_class": "general_document"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["aporte laboral"],
+        "should_contain_any": ["afiliado activo", "PAV"]
+      }
+    },
+    {
+      "case_id": "holdout_acta_amedica_pensionados",
+      "suite_id": "actas_consejo_holdout",
+      "question": "Que se acordo sobre la atencion medica para pensionados?",
+      "expectation": {
+        "document_class": "general_document",
+        "document_family": "general",
+        "target": {
+          "storage_uri_contains": "202 Oct 24.pdf",
+          "document_class": "general_document"
+        },
+        "pass_rank": 5,
+        "must_contain_all": ["pensionado"],
+        "should_contain_any": ["AMPP", "financiamiento", "atencion medica"]
+      }
+    }
+  ]
+}

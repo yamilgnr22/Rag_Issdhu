@@ -1,0 +1,51 @@
+{
+  "fixture_path": "D:/Proyectos/Rag_Issdhu/apps/api/app/evals/retrieval_eval_cases.json",
+  "total_cases": 24,
+  "passed_cases": 21,
+  "router_accuracy": 1.0,
+  "hit_at_1": 1.0,
+  "hit_at_3": 1.0,
+  "hit_at_5": 1.0,
+  "mean_reciprocal_rank": 1.0,
+  "citation_precision_at_3": 0.958,
+  "no_result_rate": 0.0,
+  "by_suite": [
+    {
+      "suite_id": "ley_822",
+      "total_cases": 8,
+      "passed_cases": 7,
+      "router_accuracy": 1.0,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mean_reciprocal_rank": 1.0,
+      "citation_precision_at_3": 1.0,
+      "no_result_rate": 0.0
+    }
+  ],
+  "results": [
+    {
+      "case_id": "ley822_art21_deducciones_rentas_trabajo",
+      "suite_id": "ley_822",
+      "question": "¿Qué deducciones autoriza el Art. 21 de la Ley 822 para las rentas del trabajo?",
+      "expected_document_class": "legal_normative",
+      "expected_document_family": "normative",
+      "expected_version_id": "v_c6817dcb363c",
+      "expected_document_id": "doc_0ee31cf6391c",
+      "router_query_type": "legal_normative",
+      "router_ok": true,
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "citation_precision_at_3": 1.0,
+      "required_terms_ok": false,
+      "optional_terms_ok": true,
+      "passed": false,
+      "fallback_reason": null,
+      "decision_trace": ["router:scores:legal=2", "router:legal_normative"],
+      "top_hits": [],
+      "notes": ["required_terms_missing"]
+    }
+  ]
+}

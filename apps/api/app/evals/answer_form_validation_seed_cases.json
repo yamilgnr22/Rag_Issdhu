@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "purpose": "Held-out seed template for answer_form and canonical unit selection validation labels.",
+  "cases": [
+    {
+      "source_fixture": "retrieval_eval_strategy_validation_cases.json",
+      "case_id": "planner_validation_focal_ley822_fuente_nicaraguense_rentas_trabajo",
+      "strategy": "focal",
+      "question": "Que situaciones considera la Ley 822 como rentas del trabajo de fuente nicaraguense, incluso cuando el trabajo se realiza fuera del pais o en organos colegiados?",
+      "suggested_answer_form": "rule_summary",
+      "suggested_primary_unit": "Art. 12",
+      "suggested_expected_units": [
+        "Art. 12"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Capitulo I > Seccion III > Art. 12"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_validation_cases.json",
+      "case_id": "planner_validation_focal_codigo_trabajo_contrato_contenido_minimo",
+      "strategy": "focal",
+      "question": "Que contenido minimo debe tener un contrato individual de trabajo por escrito segun el Codigo del Trabajo?",
+      "suggested_answer_form": "rule_summary",
+      "suggested_primary_unit": "Art. 20",
+      "suggested_expected_units": [
+        "Art. 20"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Titulo II > Capitulo I > Art. 20"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_validation_cases.json",
+      "case_id": "planner_validation_focal_niif_criterios_reconocimiento",
+      "strategy": "focal",
+      "question": "Que criterios deben cumplirse para reconocer un activo, pasivo, ingreso o gasto segun la NIIF para las PYMES?",
+      "suggested_answer_form": "rule_summary",
+      "suggested_primary_unit": "Seccion 2 > 2.27-2.30",
+      "suggested_expected_units": [
+        "Seccion 2 > 2.27-2.30"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Seccion 2 > 2.27-2.30"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_validation_cases.json",
+      "case_id": "planner_validation_focal_gafi_recomendacion29_uif",
+      "strategy": "focal",
+      "question": "Que funciones minimas debe cumplir una Unidad de Inteligencia Financiera segun la Recomendacion 29 del GAFI?",
+      "suggested_answer_form": "rule_summary",
+      "suggested_primary_unit": "Recomendacion 29",
+      "suggested_expected_units": [
+        "Recomendacion 29"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "expected_label: Recomendacion 29"
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_validation_cases.json",
+      "case_id": "planner_validation_multi_branch_ley822_fuente_nicaraguense_vinculos",
+      "strategy": "multi_branch",
+      "question": "Que articulos de la Ley 822 desarrollan las definiciones y vinculos economicos de las rentas de fuente nicaraguense?",
+      "suggested_answer_form": "unit_set",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [
+        "Art. 10",
+        "Art. 11",
+        "Art. 12",
+        "Art. 13",
+        "Art. 14",
+        "Art. 15",
+        "Art. 16"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "Expected units inferred from fixture should_contain_any."
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_validation_cases.json",
+      "case_id": "planner_validation_multi_branch_codigo_trabajo_obligaciones_partes",
+      "strategy": "multi_branch",
+      "question": "Que articulos del Codigo del Trabajo regulan las obligaciones del empleador y del trabajador dentro de la relacion laboral?",
+      "suggested_answer_form": "unit_set",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [
+        "Art. 17",
+        "Art. 18"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "Expected units inferred from original fixture notes."
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_validation_cases.json",
+      "case_id": "planner_validation_multi_branch_gafi_regulacion_supervision_autoridades",
+      "strategy": "multi_branch",
+      "question": "Que recomendaciones del GAFI se relacionan con la regulacion, supervision y facultades de las autoridades competentes?",
+      "suggested_answer_form": "unit_set",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [
+        "Recomendacion 26",
+        "Recomendacion 27",
+        "Recomendacion 28",
+        "Recomendacion 29",
+        "Recomendacion 30",
+        "Recomendacion 31"
+      ],
+      "review_status": "needs_review",
+      "source_notes": "Expected units inferred from fixture wording Recomendaciones 26-31."
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_validation_cases.json",
+      "case_id": "planner_validation_global_ley822_categorias_renta",
+      "strategy": "global",
+      "question": "Como organiza la Ley 822 el tratamiento tributario de las distintas categorias de renta dentro del impuesto sobre la renta?",
+      "suggested_answer_form": "global_summary",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [],
+      "review_status": "needs_review",
+      "source_notes": "Expected answer is a panorama, not a unit identity."
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_validation_cases.json",
+      "case_id": "planner_validation_global_codigo_trabajo_relacion_laboral_estructura",
+      "strategy": "global",
+      "question": "Que vision general ofrece el Codigo del Trabajo sobre la estructura de la relacion laboral desde su inicio hasta su terminacion?",
+      "suggested_answer_form": "global_summary",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [],
+      "review_status": "needs_review",
+      "source_notes": "Expected answer is a panorama, not a unit identity."
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_validation_cases.json",
+      "case_id": "planner_validation_global_niif_marco_conceptual_general",
+      "strategy": "global",
+      "question": "Que marco conceptual general presenta la NIIF para las PYMES para preparar estados financieros utiles para usuarios externos?",
+      "suggested_answer_form": "global_summary",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [],
+      "review_status": "needs_review",
+      "source_notes": "Expected answer is a panorama over prologo + secciones 1-2."
+    },
+    {
+      "source_fixture": "retrieval_eval_strategy_validation_cases.json",
+      "case_id": "planner_validation_global_gafi_arquitectura_tematica",
+      "strategy": "global",
+      "question": "Que arquitectura tematica completa cubren las Recomendaciones del GAFI desde politicas nacionales hasta cooperacion internacional?",
+      "suggested_answer_form": "global_summary",
+      "suggested_primary_unit": null,
+      "suggested_expected_units": [],
+      "review_status": "needs_review",
+      "source_notes": "Expected answer is a panorama over the thematic blocks."
+    }
+  ]
+}

@@ -1,0 +1,477 @@
+{
+  "cases": [
+    {
+      "case_id": "validation_ley822_rentas_exentas_aguinaldo",
+      "suite_id": "validation_ley_822",
+      "question": "Que rentas del trabajo estan exentas en la Ley 822 respecto al aguinaldo, el tramo exento inicial y ciertas indemnizaciones?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [
+          "Arto. 19"
+        ],
+        "should_contain_any": [
+          "C$100,000.00",
+          "aguinaldo",
+          "cinco meses",
+          "indemnizaciones",
+          "C$500,000.00"
+        ]
+      },
+      "notes": "expected_label: Capitulo II > Seccion II > Art. 19"
+    },
+    {
+      "case_id": "validation_ley822_deducciones_educacion_salud",
+      "suite_id": "validation_ley_822",
+      "question": "Que deducciones autoriza la Ley 822 sobre las rentas del trabajo para educacion, salud, servicios profesionales y aportes previsionales?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "25%",
+          "educacion",
+          "salud",
+          "servicios profesionales",
+          "Seguridad Social"
+        ]
+      },
+      "notes": "expected_label: Capitulo II > Seccion III > Arts. 20-21"
+    },
+    {
+      "case_id": "validation_ley822_tarifa_progresiva_ir_trabajo",
+      "suite_id": "validation_ley_822",
+      "question": "Como funciona la tarifa progresiva del IR sobre rentas del trabajo para residentes segun el Art. 23?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [
+          "Arto. 23"
+        ],
+        "should_contain_any": [
+          "15.00%",
+          "20.00%",
+          "25.00%",
+          "30.00%",
+          "renta neta anual"
+        ]
+      },
+      "notes": "expected_label: Capitulo II > Seccion IV > Art. 23"
+    },
+    {
+      "case_id": "validation_ley822_obligacion_empleadores_retener",
+      "suite_id": "validation_ley_822",
+      "question": "Que obligacion tienen los empleadores de retener, liquidar, declarar y enterar el impuesto sobre rentas del trabajo?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [
+          "Arto. 25"
+        ],
+        "should_contain_any": [
+          "retener",
+          "liquidar",
+          "declarar",
+          "enterar",
+          "cuarenta y cinco (45) dias"
+        ]
+      },
+      "notes": "expected_label: Capitulo II > Seccion V > Art. 25"
+    },
+    {
+      "case_id": "validation_ley822_declaracion_anual_varios_empleadores",
+      "suite_id": "validation_ley_822",
+      "question": "Cuando debe presentar declaracion anual un contribuyente que percibe rentas del trabajo de dos o mas empleadores?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [
+          "Arto. 29"
+        ],
+        "should_contain_any": [
+          "dos o mas empleadores",
+          "declaracion anual",
+          "liquidar",
+          "pagar",
+          "noventa (90) dias"
+        ]
+      },
+      "notes": "expected_label: Capitulo II > Seccion V > Art. 29"
+    },
+    {
+      "case_id": "validation_niif_pymes_caracteristicas_aplicacion",
+      "suite_id": "validation_niif_pymes",
+      "question": "Que caracteristicas debe cumplir una entidad para aplicar la NIIF para las PYMES?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "no tienen obligacion publica de rendir cuentas",
+          "usuarios externos",
+          "estados financieros con proposito de informacion general"
+        ]
+      },
+      "notes": "expected_label: Seccion 1 > 1.2"
+    },
+    {
+      "case_id": "validation_niif_pymes_prudencia_limite",
+      "suite_id": "validation_niif_pymes",
+      "question": "Que significa prudencia en la Seccion 2 de la NIIF para las PYMES y que limite tiene?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [
+          "prudencia"
+        ],
+        "should_contain_any": [
+          "activos o ingresos no se expresen en exceso",
+          "pasivos o gastos no se expresen en defecto",
+          "no permite el sesgo"
+        ]
+      },
+      "notes": "expected_label: Seccion 2 > 2.9"
+    },
+    {
+      "case_id": "validation_niif_pymes_declaracion_cumplimiento",
+      "suite_id": "validation_niif_pymes",
+      "question": "Que exige la NIIF para las PYMES para que una entidad afirme cumplimiento con la norma en sus estados financieros?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "declaracion, explicita y sin reservas",
+          "cumplan con todos los requerimientos",
+          "en las notas"
+        ]
+      },
+      "notes": "expected_label: Seccion 3 > 3.3"
+    },
+    {
+      "case_id": "validation_niif_pymes_cambio_politica_retroactiva",
+      "suite_id": "validation_niif_pymes",
+      "question": "Como debe contabilizarse y revelarse un cambio de politica contable aplicado de forma retroactiva?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [
+          "retroactiva"
+        ],
+        "should_contain_any": [
+          "informacion comparativa",
+          "saldos iniciales",
+          "importe del ajuste",
+          "mas fiable y relevante"
+        ]
+      },
+      "notes": "expected_label: Seccion 10 > 10.12-10.14"
+    },
+    {
+      "case_id": "validation_niif_pymes_nic39_en_vez_11_12",
+      "suite_id": "validation_niif_pymes",
+      "question": "Cuando puede una entidad aplicar NIC 39 en lugar de las Secciones 11 y 12 para sus instrumentos financieros?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [
+          "NIC 39"
+        ],
+        "should_contain_any": [
+          "Secciones 11 y 12",
+          "instrumentos financieros",
+          "politica contable"
+        ]
+      },
+      "notes": "expected_label: Seccion 11 > Eleccion de politica contable > 11.2"
+    },
+    {
+      "case_id": "validation_gafi_guias_vinculantes_o_referencia",
+      "suite_id": "validation_gafi_2025",
+      "question": "Las guias del GAFI son vinculantes o solo sirven como apoyo de referencia para los evaluadores?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "no son vinculantes",
+          "no debe formar parte de la evaluacion",
+          "guias del GAFI",
+          "informacion basica",
+          "informacion de referencia"
+        ]
+      },
+      "notes": "expected_label: Anexo I > Documentos Guia del GAFI / Metodologia parr. 38"
+    },
+    {
+      "case_id": "validation_gafi_recomendacion1_riesgos_enfoque",
+      "suite_id": "validation_gafi_2025",
+      "question": "Que exige la Recomendacion 1 del GAFI sobre identificacion de riesgos y aplicacion del enfoque basado en riesgo?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [
+          "Recomendacion 1"
+        ],
+        "should_contain_any": [
+          "identificar, evaluar y entender",
+          "enfoque basado en riesgo",
+          "mitiguen eficazmente los riesgos",
+          "proporcionales a los riesgos",
+          "APNFD"
+        ]
+      },
+      "notes": "expected_label: Recomendacion 1"
+    },
+    {
+      "case_id": "validation_gafi_recomendacion10_ddc",
+      "suite_id": "validation_gafi_2025",
+      "question": "Que prohibe y que activa la Recomendacion 10 sobre debida diligencia del cliente?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [
+          "Recomendacion 10"
+        ],
+        "should_contain_any": [
+          "cuentas anonimas",
+          "nombres obviamente ficticios",
+          "relaciones comerciales",
+          "transacciones ocasionales",
+          "sospecha de lavado"
+        ]
+      },
+      "notes": "expected_label: Recomendacion 10"
+    },
+    {
+      "case_id": "validation_gafi_recomendacion22_apnfd_ddc",
+      "suite_id": "validation_gafi_2025",
+      "question": "En que casos las APNFD deben aplicar debida diligencia del cliente conforme a la Recomendacion 22?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [
+          "Recomendacion 22"
+        ],
+        "should_contain_any": [
+          "casinos",
+          "agentes inmobiliarios",
+          "metales preciosos",
+          "abogados",
+          "contadores"
+        ]
+      },
+      "notes": "expected_label: Recomendacion 22"
+    },
+    {
+      "case_id": "validation_gafi_recomendacion24_beneficiario_final",
+      "suite_id": "validation_gafi_2025",
+      "question": "Que pide el GAFI sobre transparencia y beneficiario final de las personas juridicas?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [
+          "Recomendacion 24"
+        ],
+        "should_contain_any": [
+          "beneficiario final",
+          "adecuada, precisa y actualizada",
+          "autoridades competentes",
+          "registro",
+          "personas juridicas"
+        ]
+      },
+      "notes": "expected_label: Recomendacion 24"
+    },
+    {
+      "case_id": "validation_codigo_trabajo_contrato_verbal_constancia",
+      "suite_id": "validation_codigo_trabajo",
+      "question": "En que casos el Codigo del Trabajo permite que el contrato de trabajo sea verbal y que debe entregar el empleador?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "codigo-trabajo.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "trabajo en el campo",
+          "servicio domestico",
+          "temporales u ocasionales",
+          "constancia",
+          "salario estipulado"
+        ]
+      },
+      "notes": "expected_label: Capitulo II > Art. 24"
+    },
+    {
+      "case_id": "validation_codigo_trabajo_tiempo_indeterminado",
+      "suite_id": "validation_codigo_trabajo",
+      "question": "Cuando se presume que una relacion laboral es por tiempo indeterminado segun el Codigo del Trabajo?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "codigo-trabajo.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "tiempo indeterminado",
+          "cuando no tiene plazo",
+          "treinta dias mas",
+          "segunda prorroga",
+          "periodo de prueba"
+        ]
+      },
+      "notes": "expected_label: Capitulo II > Arts. 26-28"
+    },
+    {
+      "case_id": "validation_codigo_trabajo_suspension_colectiva",
+      "suite_id": "validation_codigo_trabajo",
+      "question": "Que exige el Codigo del Trabajo para autorizar una suspension colectiva y que pago minimo procede una vez autorizada?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "codigo-trabajo.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "suspension colectiva",
+          "Ministerio del Trabajo",
+          "Inspectorias Departamentales del Trabajo",
+          "seis dias de salario",
+          "fuerza mayor"
+        ]
+      },
+      "notes": "expected_label: Capitulo V > Arts. 38-39"
+    },
+    {
+      "case_id": "validation_codigo_trabajo_indemnizacion_art45",
+      "suite_id": "validation_codigo_trabajo",
+      "question": "Como se calcula la indemnizacion cuando el empleador rescinde un contrato por tiempo indeterminado sin causa justificada?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "codigo-trabajo.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "un mes de salario",
+          "primeros tres anos",
+          "veinte dias de salario",
+          "a partir del cuarto ano",
+          "no mayor de cinco meses"
+        ]
+      },
+      "notes": "expected_label: Capitulo VI > Art. 45"
+    },
+    {
+      "case_id": "validation_codigo_trabajo_jornada_ordinaria",
+      "suite_id": "validation_codigo_trabajo",
+      "question": "Cual es la duracion maxima de la jornada ordinaria diurna, nocturna y mixta segun el Codigo del Trabajo?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "codigo-trabajo.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "ocho horas diarias",
+          "cuarenta y ocho horas",
+          "siete horas diarias",
+          "cuarenta y dos horas",
+          "siete horas y media"
+        ]
+      },
+      "notes": "expected_label: Titulo III > Capitulo I > Arts. 49-53"
+    }
+  ]
+}

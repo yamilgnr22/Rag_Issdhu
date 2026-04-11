@@ -1,0 +1,19 @@
+{
+  "document_id": "doc_001",
+  "version_id": "v1",
+  "chunks_count": 3,
+  "table_chunks_count": 1,
+  "artifact_uri": ".data/object_store/artifacts/doc_001/v1/chunks.json",
+  "document_class": "legal_normative",
+  "document_family": "normative",
+  "chunking_strategy": "normative_hierarchical",
+  "classification_source": "deterministic",
+  "classification_confidence": 0.97,
+  "classification_reason_short": "Deterministic markers favored a legal normative document.",
+  "chunk_window": {
+    "target_tokens": 600,
+    "min_tokens": 400,
+    "max_tokens": 800,
+    "overlap_ratio": 0.2
+  }
+}

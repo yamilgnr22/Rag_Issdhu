@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "block.json",
+  "title": "Block",
+  "type": "object",
+  "required": [
+    "block_id",
+    "document_id",
+    "version_id",
+    "block_type",
+    "text",
+    "page",
+    "section_path"
+  ],
+  "properties": {
+    "block_id": { "type": "string" },
+    "document_id": { "type": "string" },
+    "version_id": { "type": "string" },
+    "block_type": { "type": "string" },
+    "text": { "type": "string" },
+    "page": { "type": "integer", "minimum": 1 },
+    "section_path": { "type": "array", "items": { "type": "string" } }
+  }
+}
+

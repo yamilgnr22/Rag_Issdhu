@@ -1,0 +1,364 @@
+{
+  "cases": [
+    {
+      "case_id": "planner_focal_ley822_deducciones_rentas_trabajo",
+      "suite_id": "planner_focal",
+      "strategy": "focal",
+      "question": "¿Qué deducciones autoriza la Ley 822 sobre las rentas del trabajo para educación, salud, servicios profesionales y aportes previsionales?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "25%",
+          "educación",
+          "salud",
+          "servicios profesionales",
+          "Seguridad Social"
+        ]
+      },
+      "notes": "expected_label: Capítulo II > Sección III > Art. 21"
+    },
+    {
+      "case_id": "planner_focal_codigo_trabajo_indemnizacion_despido",
+      "suite_id": "planner_focal",
+      "strategy": "focal",
+      "question": "¿Cómo calcula el Código del Trabajo la indemnización por despido sin causa justificada en contratos por tiempo indeterminado?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "codigo-trabajo.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "un mes de salario",
+          "primeros tres años",
+          "veinte días de salario",
+          "a partir del cuarto año",
+          "no mayor de cinco meses"
+        ]
+      },
+      "notes": "expected_label: Capítulo VI > Art. 45"
+    },
+    {
+      "case_id": "planner_focal_niif_obligacion_publica_rendir_cuentas",
+      "suite_id": "planner_focal",
+      "strategy": "focal",
+      "question": "¿Cuándo una entidad tiene obligación pública de rendir cuentas según la NIIF para las PYMES?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "obligación pública de rendir cuentas",
+          "instrumentos de deuda o de patrimonio",
+          "mercado público",
+          "mantener activos en calidad de fiduciaria",
+          "amplio grupo de terceros"
+        ]
+      },
+      "notes": "expected_label: Sección 1 > 1.3"
+    },
+    {
+      "case_id": "planner_focal_gafi_recomendacion24_beneficiario_final",
+      "suite_id": "planner_focal",
+      "strategy": "focal",
+      "question": "¿Qué exige la Recomendación 24 del GAFI sobre transparencia y beneficiario final de las personas jurídicas?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "beneficiario final",
+          "adecuada, precisa y actualizada",
+          "autoridades competentes",
+          "registro de beneficiario final",
+          "personas jurídicas"
+        ]
+      },
+      "notes": "expected_label: Recomendación 24"
+    },
+    {
+      "case_id": "planner_focal_gafi_recomendacion20_ros",
+      "suite_id": "planner_focal",
+      "strategy": "focal",
+      "question": "¿Qué debe hacer una institución financiera si sospecha que fondos están relacionados con actividad criminal o financiamiento del terrorismo?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "sospecha",
+          "motivos razonables",
+          "actividad criminal",
+          "financiamiento del terrorismo",
+          "Unidad de Inteligencia Financiera"
+        ]
+      },
+      "notes": "expected_label: Recomendación 20"
+    },
+    {
+      "case_id": "planner_multi_branch_ley822_rentas_trabajo_bloque",
+      "suite_id": "planner_multi_branch",
+      "strategy": "multi_branch",
+      "question": "¿Qué artículos de la Ley 822 regulan de forma conjunta las rentas del trabajo desde las exenciones hasta la declaración y pago?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "Art. 19",
+          "Art. 21",
+          "Art. 23",
+          "Art. 25",
+          "Art. 29"
+        ]
+      },
+      "notes": "expected_label: Capítulo II > Secciones II-V"
+    },
+    {
+      "case_id": "planner_multi_branch_codigo_trabajo_suspension_individual_colectiva",
+      "suite_id": "planner_multi_branch",
+      "strategy": "multi_branch",
+      "question": "¿Qué disposiciones del Código del Trabajo tratan sobre la suspensión individual y colectiva de la relación laboral?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "codigo-trabajo.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "suspensión individual",
+          "suspensión colectiva",
+          "Art. 37",
+          "Art. 38",
+          "Art. 39"
+        ]
+      },
+      "notes": "expected_label: Capítulo V > Arts. 35-39"
+    },
+    {
+      "case_id": "planner_multi_branch_niif_presentacion_estados_y_notas",
+      "suite_id": "planner_multi_branch",
+      "strategy": "multi_branch",
+      "question": "¿Qué secciones de la NIIF para las PYMES regulan la presentación de los estados financieros básicos y las notas?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "Presentación de estados financieros",
+          "Estado de situación financiera",
+          "Estado del resultado integral",
+          "Estado de flujos de efectivo",
+          "Notas a los estados financieros"
+        ]
+      },
+      "notes": "expected_label: Secciones 3-8"
+    },
+    {
+      "case_id": "planner_multi_branch_gafi_ddc_registros_apnfd",
+      "suite_id": "planner_multi_branch",
+      "strategy": "multi_branch",
+      "question": "¿Qué recomendaciones del GAFI cubren la debida diligencia, el mantenimiento de registros y las medidas para APNFD?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "Debida diligencia del cliente",
+          "Mantenimiento de registros",
+          "APNFD",
+          "Recomendación 10",
+          "Recomendación 22"
+        ]
+      },
+      "notes": "expected_label: Recomendaciones 10-11 y 22-23"
+    },
+    {
+      "case_id": "planner_multi_branch_codigo_trabajo_jornada_horas_extra",
+      "suite_id": "planner_multi_branch",
+      "strategy": "multi_branch",
+      "question": "¿Qué artículos del Código del Trabajo regulan la jornada ordinaria, las horas extraordinarias y sus límites?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "codigo-trabajo.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "jornada ordinaria",
+          "horas extraordinarias",
+          "tres horas diarias",
+          "nueve semanales",
+          "doble turno"
+        ]
+      },
+      "notes": "expected_label: Título III > Capítulo I > Arts. 49-60"
+    },
+    {
+      "case_id": "planner_global_ley822_temas_principales_rentas_trabajo",
+      "suite_id": "planner_global",
+      "strategy": "global",
+      "question": "¿Cuáles son los temas principales que regula la Ley 822 sobre las rentas del trabajo?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "Ley 822.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "exenciones",
+          "base imponible",
+          "deducciones",
+          "tarifa",
+          "retenciones"
+        ]
+      },
+      "notes": "expected_label: Capítulo II"
+    },
+    {
+      "case_id": "planner_global_codigo_trabajo_enfoque_proteccion_laboral",
+      "suite_id": "planner_global",
+      "strategy": "global",
+      "question": "¿Qué enfoque general adopta el Código del Trabajo respecto a la protección del trabajador y la regulación de la relación laboral?",
+      "expectation": {
+        "document_class": "legal_normative",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "codigo-trabajo.pdf",
+          "document_class": "legal_normative"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "protección del Estado",
+          "irrenunciables",
+          "empleador",
+          "trabajador",
+          "jornada de trabajo"
+        ]
+      },
+      "notes": "expected_label: Título Preliminar + Título I + Título II + Título III"
+    },
+    {
+      "case_id": "planner_global_niif_componentes_principios_generales",
+      "suite_id": "planner_global",
+      "strategy": "global",
+      "question": "¿Cuáles son los componentes y principios generales que estructuran la NIIF para las PYMES?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "NIIF PARA PYMES-(INCLUYE REFORMAS 2015).pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "PYMES",
+          "estados financieros con propósito de información general",
+          "características cualitativas",
+          "reconocimiento",
+          "presentación razonable"
+        ]
+      },
+      "notes": "expected_label: Prólogo + Secciones 1-3"
+    },
+    {
+      "case_id": "planner_global_gafi_bloques_tematicos",
+      "suite_id": "planner_global",
+      "strategy": "global",
+      "question": "¿Cuáles son los grandes bloques temáticos de las Recomendaciones del GAFI y su metodología?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "políticas y coordinación",
+          "medidas preventivas",
+          "beneficiario final",
+          "autoridades competentes",
+          "cooperación internacional"
+        ]
+      },
+      "notes": "expected_label: Contenido + Introducción + Recomendaciones"
+    },
+    {
+      "case_id": "planner_global_gafi_implementacion_y_evaluacion",
+      "suite_id": "planner_global",
+      "strategy": "global",
+      "question": "¿Qué visión general ofrece el documento del GAFI sobre cómo se implementan y evalúan sus estándares internacionales?",
+      "expectation": {
+        "document_class": "technical_standard",
+        "document_family": "normative",
+        "target": {
+          "storage_uri_contains": "000 Recomendaciones y Metodologia - Agosto - 2025.pdf",
+          "document_class": "technical_standard"
+        },
+        "pass_rank": 5,
+        "must_contain_all": [],
+        "should_contain_any": [
+          "estándar internacional",
+          "enfoque basado en riesgo",
+          "evaluación mutua",
+          "metodología de evaluación",
+          "guías"
+        ]
+      },
+      "notes": "expected_label: Introducción + Metodología de evaluación + Anexo I"
+    }
+  ]
+}
