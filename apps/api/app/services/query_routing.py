@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+import re
+import unicodedata
 
 from app.models.contracts import DocumentClass
 from app.services.query_router_classifier import QueryRouterClassifier
@@ -38,6 +40,10 @@ class QueryRoutingService:
                 decision_trace=["router:explicit_document_family:normative"],
             )
 
+        heuristic_route = self._heuristic_route(question)
+        if heuristic_route is not None:
+            return heuristic_route
+
         if self.classifier is not None:
             classification = self.classifier.classify(question=question)
             if classification is not None:
@@ -62,3 +68,29 @@ class QueryRoutingService:
         if value in {"normative", "general"}:
             return str(value)
         return None
+
+    def _heuristic_route(self, question: str) -> QueryRoute | None:
+        normalized = self._normalize(question)
+        if re.search(r"\b(?:art\.?|arto\.?|articulo)\s*\d+(?:\.\d+)?\b", normalized):
+            return QueryRoute(
+                query_type="legal_normative",
+                target_classes=["legal_normative"],
+                decision_trace=["router:heuristic=article_reference", "router:legal_normative"],
+            )
+        if "codigo del trabajo" in normalized or re.search(r"\bley\s+\d+\b", normalized):
+            return QueryRoute(
+                query_type="legal_normative",
+                target_classes=["legal_normative"],
+                decision_trace=["router:heuristic=legal_marker", "router:legal_normative"],
+            )
+        if any(marker in normalized for marker in ("niif", "gafi", "metodologia", "recomendacion")):
+            return QueryRoute(
+                query_type="technical_standard",
+                target_classes=["technical_standard"],
+                decision_trace=["router:heuristic=technical_marker", "router:technical_standard"],
+            )
+        return None
+
+    def _normalize(self, text: str) -> str:
+        normalized = unicodedata.normalize("NFKD", text or "")
+        return "".join(char for char in normalized if not unicodedata.combining(char)).lower()

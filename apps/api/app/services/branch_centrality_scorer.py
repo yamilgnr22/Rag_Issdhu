@@ -52,8 +52,11 @@ class BranchCentralityCandidate:
     reference_variants_text: str
     sample_questions_text: str
     focus_terms_text: str
+    branch_summary_context: str
+    branch_keywords_text: str
     branch_summary: str
     branch_score: float
+    boilerplate_score: float
 
 
 @dataclass
@@ -376,13 +379,16 @@ class BranchCentralityScorer:
             lines.append(f"path: {candidate.path_text}")
         if candidate.reference_variants_text:
             lines.append(f"reference_variants: {candidate.reference_variants_text}")
-        if candidate.sample_questions_text:
-            lines.append(f"sample_questions: {candidate.sample_questions_text}")
         if candidate.focus_terms_text:
             lines.append(f"focus_terms: {candidate.focus_terms_text}")
+        if candidate.branch_keywords_text:
+            lines.append(f"branch_keywords: {candidate.branch_keywords_text}")
+        if candidate.branch_summary_context:
+            lines.append(f"summary_context: {candidate.branch_summary_context[:600]}")
         if candidate.branch_summary:
             lines.append(f"summary: {candidate.branch_summary[:900]}")
         lines.append(f"branch_score: {round(candidate.branch_score, 4)}")
+        lines.append(f"boilerplate_score: {round(candidate.boilerplate_score, 4)}")
         return "\n".join(lines)
 
     def _fit_classifier(
@@ -451,8 +457,11 @@ class BranchCentralityScorer:
                     reference_variants_text=str(payload.get("reference_variants_text") or "").strip(),
                     sample_questions_text=str(payload.get("sample_questions_text") or "").strip(),
                     focus_terms_text=str(payload.get("focus_terms_text") or "").strip(),
+                    branch_summary_context=str(payload.get("branch_summary_context") or "").strip(),
+                    branch_keywords_text=str(payload.get("branch_keywords_text") or "").strip(),
                     branch_summary=str(payload.get("raw_text") or payload.get("contextualized_text") or "").strip(),
                     branch_score=round(float(score), 4),
+                    boilerplate_score=round(float(payload.get("boilerplate_score") or 0.0), 4),
                 )
             )
         return candidates
@@ -482,20 +491,21 @@ class BranchCentralityScorer:
                 "bool": {
                     "must": [
                         {
-                            "multi_match": {
-                                "query": question,
-                                "fields": [
-                                    "unit_key^10",
-                                    "reference_variants_text^9",
-                                    "canonical_label^9",
-                                    "unit_topic^10",
-                                    "sample_questions_text^8",
-                                    "path_text^7",
-                                    "focus_terms_text^6",
-                                    "document_title^5",
-                                    "retrieval_context^5",
-                                    "contextualized_text^4",
-                                    "raw_text^3",
+                                "multi_match": {
+                                    "query": question,
+                                    "fields": [
+                                        "unit_key^10",
+                                        "reference_variants_text^9",
+                                        "canonical_label^9",
+                                        "unit_topic^10",
+                                        "branch_summary_context^10",
+                                        "path_text^7",
+                                        "branch_keywords_text^7",
+                                        "focus_terms_text^6",
+                                        "document_title^5",
+                                        "retrieval_context^5",
+                                        "contextualized_text^4",
+                                        "raw_text^3",
                                 ],
                                 "type": "best_fields",
                             }

@@ -21,7 +21,7 @@ from app.services.query_evidence_intent_classifier import (
 from app.services.query_planning import QueryPlan, QueryPlanningService
 from app.services.query_rewriting import QueryRewriteService
 from app.services.query_routing import QueryRoute, QueryRoutingService
-from app.services.query_structure import QueryStructureService
+from app.services.query_structure import QueryStructure, QueryStructureService
 from app.services.reranking import RerankDocument, RerankGateway
 
 
@@ -133,6 +133,18 @@ class AnswerPackage:
     decision_trace: list[str]
     answer_form: str
     answer_style: str
+
+
+@dataclass
+class EvidenceSegment:
+    segment_id: str
+    branch_key: str
+    hits: list[RetrievalHit]
+    text: str
+    score: float
+    coverage_score: float
+    label_score: float
+    aspect_matches: list[str]
 
 
 @dataclass
@@ -300,6 +312,13 @@ class RetrievalService:
             evidence_intent=evidence_intent,
         )
         decision_trace.extend(rerank_trace)
+        reranked_hits, segment_trace = self._attach_relevant_segments(
+            question=request.question,
+            hits=reranked_hits,
+            structure=structure,
+            plan=plan,
+        )
+        decision_trace.extend(segment_trace)
         reranked_hits, visibility_trace = self._apply_visibility_policy(
             question=request.question,
             route=route,
@@ -307,6 +326,7 @@ class RetrievalService:
             branch_hits=branch_hits,
             plan=plan,
             evidence_intent=evidence_intent,
+            structure=structure,
         )
         decision_trace.extend(visibility_trace)
         reranked_hits = self._diversify_hits(request.question, route, reranked_hits, plan)
@@ -351,6 +371,7 @@ class RetrievalService:
             hits=reranked_hits,
             plan=plan,
             evidence_intent=evidence_intent,
+            structure=structure,
         )
         answer, answer_trace, used_answer_hits = self._compose_answer(
             request.question,
@@ -515,12 +536,14 @@ class RetrievalService:
                                     "fields": [
                                         "contextualized_text^4",
                                         "chunk_summary_context^5",
+                                        "branch_summary_context^3",
                                         "reference_variants_text^6",
                                         "canonical_label^4",
                                         "unit_topic^5",
                                         "unit_key^5",
                                         "document_title^2",
                                         "focus_terms_text^3",
+                                        "branch_keywords_text^3",
                                         "retrieval_context^3",
                                         "path_text^2",
                                         "raw_text",
@@ -582,6 +605,7 @@ class RetrievalService:
             "global": 16,
         }.get(plan.strategy, 12)
         fused_hits = self._fuse_hits(dense_hits, sparse_hits)[:branch_limit]
+        fused_hits = self._rank_branch_hits(question=request.question, hits=fused_hits, plan=plan)
 
         trace: list[str] = []
         if dense_reason:
@@ -594,6 +618,57 @@ class RetrievalService:
             trace.append(f"branch_sparse:hits={len(sparse_hits)}")
         trace.append(f"branch_rrf:fused={len(fused_hits)}")
         return fused_hits, trace
+
+    def _rank_branch_hits(
+        self,
+        *,
+        question: str,
+        hits: list[RetrievalHit],
+        plan: QueryPlan,
+    ) -> list[RetrievalHit]:
+        if not hits:
+            return hits
+
+        query_tokens = self._tokens(question)
+        structural_refs = self._extract_structural_references(question)
+        target_units = {value.strip().lower() for value in plan.target_units if value.strip()}
+        target_numbers = {value.strip().upper() for value in plan.target_numbers if value.strip()}
+
+        for hit in hits:
+            payload = hit.payload or {}
+            branch_tokens = self._tokens(
+                " ".join(
+                    [
+                        str(payload.get("canonical_label") or ""),
+                        str(payload.get("unit_topic") or ""),
+                        str(payload.get("path_text") or ""),
+                        str(payload.get("branch_summary_context") or ""),
+                        str(payload.get("branch_keywords_text") or ""),
+                        str(payload.get("reference_variants_text") or ""),
+                        hit.raw_text[:900],
+                    ]
+                )
+            )
+            lexical = max(
+                self._overlap_ratio(query_tokens, branch_tokens),
+                self._soft_overlap_ratio(query_tokens, branch_tokens),
+            )
+            exact = 0.45 if self._contains_exact_reference(question, hit) else 0.0
+            structural = self._structural_reference_score(structural_refs, hit)
+            mismatch = self._structural_reference_mismatch_penalty(structural_refs, hit)
+            hit.rrf_score = (
+                hit.rrf_score
+                + (0.55 * lexical)
+                + exact
+                + structural
+                + self._branch_target_unit_score(hit, target_units)
+                + self._branch_target_number_score(hit, target_numbers)
+                + self._branch_specificity_score(hit, plan)
+                - (1.15 * mismatch)
+                - (0.7 * self._boilerplate_score(hit))
+            )
+
+        return sorted(hits, key=lambda item: item.rrf_score, reverse=True)
 
     def _branch_dense_search(
         self,
@@ -648,8 +723,10 @@ class RetrievalService:
                                         "reference_variants_text^9",
                                         "canonical_label^9",
                                         "unit_topic^10",
+                                        "branch_summary_context^10",
                                         "chunk_summary_context^8",
                                         "path_text^7",
+                                        "branch_keywords_text^7",
                                         "focus_terms_text^6",
                                         "document_title^5",
                                         "retrieval_context^5",
@@ -1236,6 +1313,7 @@ class RetrievalService:
             structural_boost = self._structural_reference_score(structural_refs, hit)
             structural_penalty = self._structural_reference_mismatch_penalty(structural_refs, hit)
             role_alignment = self._evidence_role_alignment_score(evidence_intent, hit)
+            boilerplate_penalty = self._boilerplate_score(hit)
             hit.rerank_score = (
                 hit.rrf_score
                 + (0.8 * lexical_overlap)
@@ -1244,6 +1322,7 @@ class RetrievalService:
                 + structural_boost
                 - structural_penalty
                 + (0.55 * role_alignment)
+                - (0.85 * boilerplate_penalty)
             )
         return sorted(hits, key=lambda item: item.rerank_score, reverse=True)
 
@@ -1284,10 +1363,11 @@ class RetrievalService:
         branch_hits: list[RetrievalHit],
         plan: QueryPlan,
         evidence_intent: EvidenceIntentClassification,
+        structure: QueryStructure,
     ) -> tuple[list[RetrievalHit], list[str]]:
         if not hits:
             return hits, ["visibility:promoted=0"]
-        if self._is_comparison_query(question) or plan.strategy != "focal":
+        if self._is_comparison_query(question):
             return hits, ["visibility:promoted=0"]
 
         selected_branch_keys, _ = self._select_branch_keys(
@@ -1297,38 +1377,340 @@ class RetrievalService:
             evidence_intent=evidence_intent,
         )
         selected_branch_keys = set(selected_branch_keys)
-        if not selected_branch_keys:
+        visible_window = min(4 if plan.strategy != "focal" else 3, len(hits))
+        curated_front = self._curate_hits_for_coverage(
+            question=question,
+            hits=hits,
+            structure=structure,
+            plan=plan,
+            evidence_intent=evidence_intent,
+            limit=visible_window,
+            selected_branch_keys=selected_branch_keys,
+            prefer_same_branch=plan.strategy == "focal",
+            prefer_diversity=plan.diversity_required,
+        )
+        if not curated_front:
             return hits, ["visibility:promoted=0"]
 
-        visible_window = min(3, len(hits))
-        promoted = 0
-        ordered_hits = list(hits)
-        for position in range(visible_window):
-            current = ordered_hits[position]
-            if self._evidence_role_alignment_score(evidence_intent, current) >= 0.35:
-                continue
-            replacement_index = self._find_visibility_replacement(
-                question=question,
-                route=route,
+        selected_chunks = {hit.chunk_id for hit in curated_front}
+        ordered_hits = curated_front + [hit for hit in hits if hit.chunk_id not in selected_chunks]
+        if plan.strategy == "focal":
+            ordered_hits, _ = self._enforce_same_branch_visibility(
                 hits=ordered_hits,
-                start_index=position + 1,
+                visible_window=visible_window,
                 selected_branch_keys=selected_branch_keys,
-                evidence_intent=evidence_intent,
             )
-            if replacement_index is None:
-                continue
-            replacement = ordered_hits.pop(replacement_index)
-            ordered_hits.insert(position, replacement)
-            promoted += 1
 
-        ordered_hits, branch_promoted = self._enforce_same_branch_visibility(
-            hits=ordered_hits,
-            visible_window=visible_window,
-            selected_branch_keys=selected_branch_keys,
+        promoted = sum(
+            1
+            for index, hit in enumerate(ordered_hits[:visible_window])
+            if index >= len(hits) or hit.chunk_id != hits[index].chunk_id
         )
-        promoted += branch_promoted
+        return ordered_hits, [f"visibility:promoted={promoted}", f"visibility:window={visible_window}"]
 
-        return ordered_hits, [f"visibility:promoted={promoted}"]
+    def _attach_relevant_segments(
+        self,
+        *,
+        question: str,
+        hits: list[RetrievalHit],
+        structure: QueryStructure,
+        plan: QueryPlan,
+    ) -> tuple[list[RetrievalHit], list[str]]:
+        if not hits:
+            return hits, ["segments:attached=0"]
+
+        candidate_limit = min(len(hits), 12 if plan.strategy != "global" else 16)
+        aspects = self._query_aspects(question=question, structure=structure, plan=plan)
+        neighbor_cache: dict[tuple[str, str, str, int, int], list[RetrievalHit]] = {}
+        known_hits = {hit.chunk_id: hit for hit in hits}
+        attached = 0
+
+        for hit in hits[:candidate_limit]:
+            segment = self._build_evidence_segment(
+                question=question,
+                hit=hit,
+                aspects=aspects,
+                plan=plan,
+                neighbor_cache=neighbor_cache,
+            )
+            if segment is None:
+                continue
+            for member in segment.hits:
+                target = known_hits.get(member.chunk_id)
+                if target is None:
+                    continue
+                current_score = self._payload_float(target, "segment_score")
+                if current_score >= segment.score:
+                    continue
+                self._annotate_hit_with_segment(target, segment)
+                attached += 1
+        return hits, [f"segments:attached={attached}", f"segments:aspects={len(aspects)}"]
+
+    def _build_evidence_segment(
+        self,
+        *,
+        question: str,
+        hit: RetrievalHit,
+        aspects: list[str],
+        plan: QueryPlan,
+        neighbor_cache: dict[tuple[str, str, str, int, int], list[RetrievalHit]],
+    ) -> EvidenceSegment | None:
+        payload = hit.payload or {}
+        chunk_order = int(payload.get("chunk_order") or 0)
+        branch_key = self._branch_key_for_hit(hit)
+        if not branch_key or not chunk_order:
+            return None
+
+        radius = 1 if plan.strategy == "focal" else 2
+        cache_key = (
+            hit.document_id,
+            hit.version_id,
+            branch_key,
+            max(0, chunk_order - radius),
+            chunk_order + radius,
+        )
+        neighbor_hits = neighbor_cache.get(cache_key)
+        if neighbor_hits is None:
+            neighbor_hits = self._segment_neighbor_hits(
+                hit=hit,
+                branch_key=branch_key,
+                start_order=cache_key[3],
+                end_order=cache_key[4],
+            )
+            neighbor_cache[cache_key] = neighbor_hits
+
+        ordered_members: list[RetrievalHit] = []
+        seen_chunks: set[str] = set()
+        for member in sorted([hit, *neighbor_hits], key=lambda item: int(item.payload.get("chunk_order") or 0)):
+            if member.chunk_id in seen_chunks:
+                continue
+            seen_chunks.add(member.chunk_id)
+            ordered_members.append(member)
+
+        if not ordered_members:
+            return None
+
+        segment_text = "\n".join(
+            text
+            for text in (
+                " ".join((member.raw_text or "").split())
+                for member in ordered_members
+            )
+            if text
+        ).strip()
+        if not segment_text:
+            return None
+
+        aspect_matches = self._matching_aspects(aspects, ordered_members[0], text_override=segment_text)
+        coverage_score = self._coverage_score_from_matches(aspect_matches, aspects)
+        label_score = self._label_expressiveness_score(hit)
+        structural_refs = self._extract_structural_references(question)
+        structural_score = self._structural_reference_score(structural_refs, hit)
+        boilerplate_penalty = max(self._boilerplate_score(member) for member in ordered_members)
+        segment_score = (
+            hit.rerank_score
+            + (1.1 * coverage_score)
+            + (0.45 * label_score)
+            + (0.35 * structural_score)
+            + min(0.25, 0.08 * (len(ordered_members) - 1))
+            - (0.9 * boilerplate_penalty)
+        )
+        start_order = int(ordered_members[0].payload.get("chunk_order") or chunk_order)
+        end_order = int(ordered_members[-1].payload.get("chunk_order") or chunk_order)
+        return EvidenceSegment(
+            segment_id=f"{hit.document_id}:{hit.version_id}:{branch_key}:{start_order}:{end_order}",
+            branch_key=branch_key,
+            hits=ordered_members,
+            text=segment_text,
+            score=round(segment_score, 4),
+            coverage_score=round(coverage_score, 4),
+            label_score=round(label_score, 4),
+            aspect_matches=aspect_matches,
+        )
+
+    def _segment_neighbor_hits(
+        self,
+        *,
+        hit: RetrievalHit,
+        branch_key: str,
+        start_order: int,
+        end_order: int,
+    ) -> list[RetrievalHit]:
+        try:
+            query_body = {
+                "size": max(1, end_order - start_order + 1),
+                "sort": [{"chunk_order": {"order": "asc"}}],
+                "query": {
+                    "bool": {
+                        "must": [
+                            {"term": {"document_id": hit.document_id}},
+                            {"term": {"version_id": hit.version_id}},
+                            {"term": {"branch_keys": branch_key}},
+                            {"range": {"chunk_order": {"gte": start_order, "lte": end_order}}},
+                        ],
+                        "filter": [{"term": {"version_status": "active"}}],
+                    }
+                },
+            }
+            payload = self._opensearch_search(query_body)
+            return self._parse_opensearch_hits(payload)
+        except Exception:
+            return []
+
+    def _annotate_hit_with_segment(self, hit: RetrievalHit, segment: EvidenceSegment) -> None:
+        payload = hit.payload or {}
+        payload["segment_text"] = segment.text
+        payload["segment_member_chunk_ids"] = [member.chunk_id for member in segment.hits]
+        payload["segment_signature"] = segment.segment_id
+        payload["segment_score"] = segment.score
+        payload["segment_coverage_score"] = segment.coverage_score
+        payload["segment_label_score"] = segment.label_score
+        payload["segment_aspect_matches"] = segment.aspect_matches
+        payload["segment_branch_key"] = segment.branch_key
+        hit.payload = payload
+
+    def _query_aspects(
+        self,
+        *,
+        question: str,
+        structure: QueryStructure,
+        plan: QueryPlan,
+    ) -> list[str]:
+        aspects: list[str] = []
+
+        def add(value: str) -> None:
+            cleaned = " ".join((value or "").split()).strip()
+            normalized = self._normalize(cleaned)
+            if cleaned and normalized and cleaned not in aspects:
+                aspects.append(cleaned)
+
+        for reference in structure.references:
+            add(reference.label)
+        for marker in structure.document_markers:
+            add(marker)
+        for topic in [*structure.topic_terms, *plan.topics]:
+            add(topic)
+
+        normalized_question = self._normalize(question)
+        for phrase, canonical in BOOSTABLE_PHRASES.items():
+            if phrase in normalized_question:
+                add(canonical)
+        return aspects[:10]
+
+    def _matching_aspects(
+        self,
+        aspects: list[str],
+        hit: RetrievalHit,
+        *,
+        text_override: str | None = None,
+    ) -> list[str]:
+        payload = hit.payload or {}
+        haystack = self._normalize(
+            " ".join(
+                [
+                    str(payload.get("canonical_label") or ""),
+                    str(payload.get("path_text") or ""),
+                    str(payload.get("unit_topic") or ""),
+                    str(payload.get("branch_summary_context") or ""),
+                    str(payload.get("focus_terms_text") or ""),
+                    text_override or str(payload.get("segment_text") or hit.raw_text or ""),
+                ]
+            )
+        )
+        haystack_tokens = self._tokens(haystack)
+        matched: list[str] = []
+        for aspect in aspects:
+            normalized_aspect = self._normalize(aspect)
+            if not normalized_aspect:
+                continue
+            if normalized_aspect in haystack:
+                matched.append(normalized_aspect)
+                continue
+            aspect_tokens = self._tokens(normalized_aspect)
+            if not aspect_tokens:
+                continue
+            overlap = max(
+                self._overlap_ratio(aspect_tokens, haystack_tokens),
+                self._soft_overlap_ratio(aspect_tokens, haystack_tokens),
+            )
+            if overlap >= 0.6:
+                matched.append(normalized_aspect)
+        return self._dedupe_strings(matched)
+
+    def _coverage_score_from_matches(self, matches: list[str], aspects: list[str]) -> float:
+        if not aspects:
+            return 0.0
+        return min(1.0, len(matches) / max(1, len(aspects)))
+
+    def _curate_hits_for_coverage(
+        self,
+        *,
+        question: str,
+        hits: list[RetrievalHit],
+        structure: QueryStructure,
+        plan: QueryPlan,
+        evidence_intent: EvidenceIntentClassification,
+        limit: int,
+        selected_branch_keys: set[str],
+        prefer_same_branch: bool,
+        prefer_diversity: bool,
+    ) -> list[RetrievalHit]:
+        if not hits or limit <= 0:
+            return []
+
+        aspects = self._query_aspects(question=question, structure=structure, plan=plan)
+        pool = list(hits[: max(limit + 10, min(len(hits), 16))])
+        selected: list[RetrievalHit] = []
+        covered_aspects: set[str] = set()
+        seen_branches: set[str] = set()
+        seen_segments: set[str] = set()
+
+        while pool and len(selected) < limit:
+            best_index: int | None = None
+            best_score = float("-inf")
+            for index, candidate in enumerate(pool):
+                branch_key = self._branch_key_for_hit(candidate)
+                segment_signature = str(candidate.payload.get("segment_signature") or candidate.chunk_id)
+                match_set = set(self._matching_aspects(aspects, candidate))
+                gain = len(match_set - covered_aspects)
+                score = candidate.rerank_score
+                score += 0.4 * self._payload_float(candidate, "segment_score")
+                score += 0.55 * self._answer_focus_score(question, candidate)
+                score += 0.5 * self._evidence_role_alignment_score(evidence_intent, candidate)
+                score += 0.55 * gain
+                score += 0.25 * self._payload_float(candidate, "segment_coverage_score")
+                score += 0.2 * self._label_expressiveness_score(candidate)
+                score -= 0.95 * self._boilerplate_score(candidate)
+
+                if selected_branch_keys and branch_key in selected_branch_keys:
+                    score += 0.45
+                elif selected_branch_keys:
+                    score -= 0.15
+
+                if prefer_same_branch and selected:
+                    primary_branch = self._branch_key_for_hit(selected[0])
+                    if primary_branch and branch_key == primary_branch:
+                        score += 0.35
+
+                if prefer_diversity:
+                    score += 0.25 if branch_key and branch_key not in seen_branches else -0.08
+
+                if segment_signature in seen_segments:
+                    score -= 0.6
+                if score > best_score:
+                    best_score = score
+                    best_index = index
+
+            if best_index is None:
+                break
+
+            chosen = pool.pop(best_index)
+            selected.append(chosen)
+            covered_aspects.update(self._matching_aspects(aspects, chosen))
+            seen_branches.add(self._branch_key_for_hit(chosen))
+            seen_segments.add(str(chosen.payload.get("segment_signature") or chosen.chunk_id))
+
+        return selected
 
     def _normalize_provider_scores(
         self,
@@ -1361,8 +1743,11 @@ class RetrievalService:
             f"unit_key: {payload.get('unit_key') or ''}",
             f"reference_variants: {payload.get('reference_variants_text') or ''}",
             f"focus_terms: {payload.get('focus_terms_text') or ''}",
+            f"branch_keywords: {payload.get('branch_keywords_text') or ''}",
             f"context: {hit.retrieval_context or ''}",
             f"chunk_summary_context: {payload.get('chunk_summary_context') or ''}",
+            f"branch_summary_context: {payload.get('branch_summary_context') or ''}",
+            f"segment_text: {payload.get('segment_text') or ''}",
             f"content: {hit.raw_text or ''}",
         ]
         structured = "\n".join(line for line in lines if line.strip())
@@ -1671,6 +2056,7 @@ class RetrievalService:
         hits: list[RetrievalHit],
         plan: QueryPlan,
         evidence_intent: EvidenceIntentClassification,
+        structure: QueryStructure,
     ) -> AnswerPackage:
         question = request.question
         candidate_hits = self._select_answer_hits(
@@ -1679,6 +2065,7 @@ class RetrievalService:
             plan,
             evidence_intent=evidence_intent,
             answer_form="unknown",
+            structure=structure,
         )
         decision_trace = [
             "answer_form:provider=disabled",
@@ -2466,6 +2853,7 @@ class RetrievalService:
         *,
         evidence_intent: EvidenceIntentClassification,
         answer_form: str,
+        structure: QueryStructure,
     ) -> list[RetrievalHit]:
         if answer_form == "unit_set":
             candidate_hits = self._unique_branch_hits(hits, limit=24)
@@ -2477,11 +2865,26 @@ class RetrievalService:
             candidate_hits = self._unique_branch_hits(hits, limit=10)
         else:
             candidate_hits = hits[:10]
-        return self._rank_answer_hits(
+        ranked_hits = self._rank_answer_hits(
             question,
             candidate_hits,
             evidence_intent=evidence_intent,
         )
+        curated = self._curate_hits_for_coverage(
+            question=question,
+            hits=ranked_hits,
+            structure=structure,
+            plan=plan,
+            evidence_intent=evidence_intent,
+            limit=min(len(ranked_hits), 6 if plan.strategy == "focal" else 8),
+            selected_branch_keys=set(),
+            prefer_same_branch=plan.same_branch_preferred,
+            prefer_diversity=plan.diversity_required,
+        )
+        if not curated:
+            return ranked_hits
+        selected_chunks = {hit.chunk_id for hit in curated}
+        return curated + [hit for hit in ranked_hits if hit.chunk_id not in selected_chunks]
 
     def _augment_answer_candidates_with_example_units(
         self,
@@ -2817,8 +3220,10 @@ class RetrievalService:
             score += 1.2
 
         score += 0.9 * self._evidence_role_alignment_score(evidence_intent, hit)
+        score += 0.25 * self._payload_float(hit, "segment_score")
         score += max(0.0, 0.4 - (0.03 * max(0, position - 1)))
         score += min(0.6, max(0.0, hit.rerank_score))
+        score -= 0.9 * self._boilerplate_score(hit)
 
         return score
 
@@ -2854,6 +3259,33 @@ class RetrievalService:
         target = max(scores.get("substantive", 0.0), scores.get("reference", 0.0))
         return max(-1.0, min(1.0, target - scores.get("editorial", 0.0)))
 
+    def _payload_float(self, hit: RetrievalHit, field_name: str) -> float:
+        payload = hit.payload or {}
+        try:
+            return float(payload.get(field_name) or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _boilerplate_score(self, hit: RetrievalHit) -> float:
+        return max(0.0, self._payload_float(hit, "boilerplate_score"))
+
+    def _label_expressiveness_score(self, hit: RetrievalHit) -> float:
+        payload = hit.payload or {}
+        unit_type = str(payload.get("unit_type") or "").strip().lower()
+        unit_number = str(payload.get("unit_number") or "").strip()
+        canonical_label = str(payload.get("canonical_label") or "").strip()
+        path = self._as_path(payload.get("hierarchy_path") or payload.get("section_path"))
+        score = 0.0
+        if canonical_label:
+            score += 0.18
+        if unit_number:
+            score += 0.16
+        if unit_type in {"article", "section", "recommendation", "annex", "chapter", "title", "book"}:
+            score += 0.22
+        if len(path) >= 2:
+            score += min(0.18, 0.05 * len(path))
+        return min(0.7, score)
+
     def _rank_answer_hits(
         self,
         question: str,
@@ -2866,7 +3298,13 @@ class RetrievalService:
         return sorted(
             hits,
             key=lambda hit: (
-                self._answer_focus_score(question, hit),
+                (
+                    self._answer_focus_score(question, hit)
+                    + (0.35 * self._payload_float(hit, "segment_score"))
+                    + (0.35 * self._payload_float(hit, "segment_coverage_score"))
+                    + (0.2 * self._label_expressiveness_score(hit))
+                    - (0.9 * self._boilerplate_score(hit))
+                ),
                 self._evidence_role_alignment_score(evidence_intent, hit),
                 hit.rerank_score,
             ),
@@ -2876,6 +3314,7 @@ class RetrievalService:
     def _answer_focus_score(self, question: str, hit: RetrievalHit) -> float:
         payload = hit.payload or {}
         query_tokens = self._tokens(question)
+        evidence_text = str(payload.get("segment_text") or hit.raw_text or "")
         topical_tokens = self._tokens(
             " ".join(
                 [
@@ -2883,8 +3322,10 @@ class RetrievalService:
                     str(payload.get("unit_topic") or ""),
                     str(payload.get("path_text") or ""),
                     str(payload.get("focus_terms_text") or ""),
+                    str(payload.get("branch_summary_context") or ""),
+                    str(payload.get("branch_keywords_text") or ""),
                     str(payload.get("reference_variants_text") or ""),
-                    hit.raw_text[:600],
+                    evidence_text[:900],
                 ]
             )
         )
@@ -2901,6 +3342,8 @@ class RetrievalService:
             specificity -= 0.18
         if unit_type == "document" and path_depth <= 1:
             specificity -= 0.22
+        specificity += min(0.18, 0.12 * self._payload_float(hit, "segment_coverage_score"))
+        specificity -= 0.35 * self._boilerplate_score(hit)
         return lexical + specificity
 
     def _is_comparison_query(self, question: str) -> bool:
@@ -2942,7 +3385,8 @@ class RetrievalService:
         return normalized[: limit - 3].rstrip() + "..."
 
     def _question_focused_evidence_text(self, question: str, hit: RetrievalHit, *, limit: int) -> str:
-        raw_text = " ".join((hit.raw_text or "").split())
+        payload = hit.payload or {}
+        raw_text = " ".join((str(payload.get("segment_text") or hit.raw_text or "")).split())
         if not raw_text:
             return ""
 
@@ -2951,7 +3395,6 @@ class RetrievalService:
             return self._compress_text(raw_text, limit)
 
         query_tokens = self._tokens(question)
-        payload = hit.payload or {}
         label_text = self._normalize(
             " ".join(
                 filter(
@@ -3119,6 +3562,7 @@ class RetrievalService:
             if not branch_key or branch_key in seen:
                 continue
             seen.add(branch_key)
+            boilerplate_score = float(payload.get("boilerplate_score") or 0.0)
             candidates.append(
                 BranchCentralityCandidate(
                     branch_key=branch_key,
@@ -3130,8 +3574,11 @@ class RetrievalService:
                     reference_variants_text=str(payload.get("reference_variants_text") or "").strip(),
                     sample_questions_text=str(payload.get("sample_questions_text") or "").strip(),
                     focus_terms_text=str(payload.get("focus_terms_text") or "").strip(),
+                    branch_summary_context=str(payload.get("branch_summary_context") or "").strip(),
+                    branch_keywords_text=str(payload.get("branch_keywords_text") or "").strip(),
                     branch_summary=str(payload.get("raw_text") or hit.raw_text or "").strip(),
-                    branch_score=float(hit.rrf_score or 0.0),
+                    branch_score=max(0.0, float(hit.rrf_score or 0.0) - (0.5 * boilerplate_score)),
+                    boilerplate_score=boilerplate_score,
                 )
             )
         return candidates
@@ -3145,7 +3592,11 @@ class RetrievalService:
         base_score = 0.88 * float(probability)
         if candidate is None:
             return base_score
-        return base_score + (0.12 * max(0.0, float(candidate.branch_score)))
+        return (
+            base_score
+            + (0.12 * max(0.0, float(candidate.branch_score)))
+            - (0.08 * max(0.0, float(candidate.boilerplate_score)))
+        )
 
     def _branch_target_unit_score(self, hit: RetrievalHit, target_units: set[str]) -> float:
         if not target_units:

@@ -547,6 +547,13 @@ class IndexingService:
             version_id=version.version_id,
             hierarchy_path=hierarchy_path,
         )
+        boilerplate_profile = self._boilerplate_profile(
+            hierarchy_path=hierarchy_path,
+            canonical_label=canonical_label,
+            unit_type=unit_type,
+            raw_text=chunk.text,
+            chunk_kind=str(metadata.get("chunk_kind", "unknown")),
+        )
 
         index_document: dict[str, object] = {
             "chunk_id": chunk.chunk_id,
@@ -588,9 +595,15 @@ class IndexingService:
             "focus_terms_text": " | ".join(focus_terms),
             "sample_questions": sample_questions,
             "sample_questions_text": " | ".join(sample_questions),
+            "branch_summary_context": "",
+            "branch_keywords": [],
+            "branch_keywords_text": "",
             "branch_keys": branch_keys,
             "branch_lead_keys": [],
             "is_branch_lead": False,
+            "is_boilerplate": boilerplate_profile["is_boilerplate"],
+            "boilerplate_score": boilerplate_profile["boilerplate_score"],
+            "boilerplate_reasons": boilerplate_profile["boilerplate_reasons"],
         }
 
         for label in (
@@ -826,6 +839,24 @@ class IndexingService:
                 child_labels=child_labels,
                 snippets=snippets,
             )
+            branch_summary_context = self._branch_summary_context(
+                document_title=document_title,
+                path=aggregate["hierarchy_path"],
+                canonical_label=str(aggregate["canonical_label"] or ""),
+                unit_type=str(aggregate["unit_type"] or ""),
+                unit_number=str(aggregate["unit_number"] or ""),
+                unit_topic=str(aggregate["unit_topic"] or ""),
+                child_labels=child_labels,
+                snippets=snippets,
+            )
+            branch_keywords = self._branch_keywords(
+                hierarchy_path=list(aggregate["hierarchy_path"]),
+                canonical_label=str(aggregate["canonical_label"] or ""),
+                unit_type=str(aggregate["unit_type"] or ""),
+                unit_topic=str(aggregate["unit_topic"] or ""),
+                child_labels=child_labels,
+                snippets=snippets,
+            )
             retrieval_context = self._branch_retrieval_context(
                 document_title=document_title,
                 path=aggregate["hierarchy_path"],
@@ -839,7 +870,7 @@ class IndexingService:
                 part
                 for part in (
                     self._document_title_short(document_title),
-                    branch_summary,
+                    branch_summary_context,
                 )
                 if part
             )
@@ -847,15 +878,25 @@ class IndexingService:
                 hierarchy_path=list(aggregate["hierarchy_path"]),
                 retrieval_context=retrieval_context,
                 raw_text=" ".join(snippets),
-                supplemental_texts=[chunk_summary_context, *child_labels],
+                supplemental_texts=[chunk_summary_context, " | ".join(branch_keywords), *child_labels],
             )
             contextualized_text = "\n".join(
                 part
                 for part in (
                     retrieval_context,
                     chunk_summary_context,
+                    "Palabras clave: " + ", ".join(branch_keywords[:10]) if branch_keywords else "",
+                    branch_summary,
                 )
                 if part
+            )
+            boilerplate_profile = self._boilerplate_profile(
+                hierarchy_path=list(aggregate["hierarchy_path"]),
+                canonical_label=str(aggregate["canonical_label"] or ""),
+                unit_type=str(aggregate["unit_type"] or ""),
+                raw_text=branch_summary,
+                child_labels=child_labels,
+                source_block_types=aggregate["source_block_types"],
             )
             branch_primary_kind = self._branch_primary_kind(
                 aggregate["chunk_kinds"],
@@ -887,6 +928,9 @@ class IndexingService:
                     "retrieval_context": retrieval_context,
                     "contextualized_text": contextualized_text,
                     "chunk_summary_context": chunk_summary_context,
+                    "branch_summary_context": branch_summary_context,
+                    "branch_keywords": branch_keywords,
+                    "branch_keywords_text": " | ".join(branch_keywords),
                     "raw_text": branch_summary,
                     "block_refs": aggregate["child_chunk_ids"],
                     "source_block_refs": aggregate["source_block_ids"][:48],
@@ -914,6 +958,9 @@ class IndexingService:
                     "page_start": aggregate["page_start"],
                     "page_end": aggregate["page_end"],
                     "inferred_only": aggregate["inferred_only"],
+                    "is_boilerplate": boilerplate_profile["is_boilerplate"],
+                    "boilerplate_score": boilerplate_profile["boilerplate_score"],
+                    "boilerplate_reasons": boilerplate_profile["boilerplate_reasons"],
                 }
             )
 
@@ -941,6 +988,7 @@ class IndexingService:
             "retrieval_context": {"type": "text"},
             "contextualized_text": {"type": "text"},
             "chunk_summary_context": {"type": "text"},
+            "branch_summary_context": {"type": "text"},
             "raw_text": {"type": "text"},
             "block_refs": {"type": "keyword"},
             "source_block_refs": {"type": "keyword"},
@@ -972,12 +1020,17 @@ class IndexingService:
             "reference_variants_text": {"type": "text"},
             "focus_terms": {"type": "keyword"},
             "focus_terms_text": {"type": "text"},
+            "branch_keywords": {"type": "keyword"},
+            "branch_keywords_text": {"type": "text"},
             "sample_questions": {"type": "text"},
             "sample_questions_text": {"type": "text"},
             "branch_keys": {"type": "keyword"},
             "branch_lead_keys": {"type": "keyword"},
             "is_branch_lead": {"type": "boolean"},
             "inferred_only": {"type": "boolean"},
+            "is_boilerplate": {"type": "boolean"},
+            "boilerplate_score": {"type": "float"},
+            "boilerplate_reasons": {"type": "keyword"},
         }
 
     def _branch_index_properties(self) -> dict[str, object]:
@@ -1298,9 +1351,21 @@ class IndexingService:
 
     def _embedding_text(self, payload: dict[str, object]) -> str:
         summary_context = str(payload.get("chunk_summary_context") or "").strip()
+        branch_summary_context = str(payload.get("branch_summary_context") or "").strip()
+        branch_keywords_text = str(payload.get("branch_keywords_text") or "").strip()
         contextualized_text = str(payload.get("contextualized_text") or "").strip()
         raw_text = str(payload.get("raw_text") or "").strip()
-        return "\n".join(part for part in (summary_context, contextualized_text, raw_text) if part).strip()
+        return "\n".join(
+            part
+            for part in (
+                summary_context,
+                branch_summary_context,
+                branch_keywords_text,
+                contextualized_text,
+                raw_text,
+            )
+            if part
+        ).strip()
 
     def _extract_label_number(self, label: str) -> str:
         text = (label or "").strip()
@@ -1428,6 +1493,32 @@ class IndexingService:
         ]
         return " ".join(part for part in parts if part).strip()
 
+    def _branch_summary_context(
+        self,
+        *,
+        document_title: str,
+        path: list[str],
+        canonical_label: str,
+        unit_type: str,
+        unit_number: str,
+        unit_topic: str,
+        child_labels: list[str],
+        snippets: list[str],
+    ) -> str:
+        short_title = self._document_title_short(document_title)
+        parts = [
+            f"Documento {short_title}.",
+            f"Ruta estructural {' > '.join(path)}." if path else "",
+            f"Unidad central {canonical_label} ({unit_type})." if canonical_label else "",
+            f"Numero {unit_number}." if unit_number else "",
+            f"Tema principal {unit_topic}." if unit_topic else "",
+            f"Subtemas visibles: {', '.join(child_labels[:4])}." if child_labels else "",
+        ]
+        lead_snippet = " ".join(snippets[:2]).strip()
+        if lead_snippet:
+            parts.append(f"Contenido representativo: {self._compress_text(lead_snippet, 320)}")
+        return " ".join(part for part in parts if part).strip()
+
     def _branch_retrieval_context(
         self,
         *,
@@ -1449,6 +1540,104 @@ class IndexingService:
             f"subtemas {', '.join(child_labels)}" if child_labels else "",
         ]
         return "; ".join(part for part in parts if part).strip()
+
+    def _branch_keywords(
+        self,
+        *,
+        hierarchy_path: list[str],
+        canonical_label: str,
+        unit_type: str,
+        unit_topic: str,
+        child_labels: list[str],
+        snippets: list[str],
+        limit: int = 12,
+    ) -> list[str]:
+        blocked = {
+            "art",
+            "arto",
+            "articulo",
+            "capitulo",
+            "titulo",
+            "libro",
+            "seccion",
+            "recomendacion",
+            "anexo",
+            "documento",
+            unit_type.strip().lower(),
+        }
+        frequencies: Counter[str] = Counter()
+        for text in [*hierarchy_path, canonical_label, unit_topic, *child_labels, *snippets[:2]]:
+            for token in TOKEN_PATTERN.findall(self._normalize(text)):
+                if (
+                    token in FOCUS_STOPWORDS
+                    or token in blocked
+                    or token.isdigit()
+                    or len(token) < 4
+                    or re.fullmatch(r"[ivxlcdm]+", token)
+                ):
+                    continue
+                frequencies[token] += 1
+        return [token for token, _ in frequencies.most_common(limit)]
+
+    def _boilerplate_profile(
+        self,
+        *,
+        hierarchy_path: list[str],
+        canonical_label: str,
+        unit_type: str,
+        raw_text: str,
+        chunk_kind: str = "",
+        child_labels: list[str] | None = None,
+        source_block_types: Counter[str] | None = None,
+    ) -> dict[str, object]:
+        normalized_path = self._normalize(" > ".join(hierarchy_path))
+        normalized_label = self._normalize(canonical_label)
+        normalized_text = self._normalize(" ".join((raw_text or "").split()))
+        marker_probe_text = normalized_text.replace("contenido representativo", " ")
+        reasons: list[str] = []
+        score = 0.0
+
+        marker_hits = [
+            marker
+            for marker in (
+                "indice",
+                "contenido",
+                "tabla de contenido",
+                "sumario",
+                "portada",
+            )
+            if marker in normalized_path or marker in normalized_label or marker in marker_probe_text[:600]
+        ]
+        if marker_hits:
+            score += 0.9
+            reasons.append("marker:" + ",".join(marker_hits[:3]))
+
+        if chunk_kind in {"reference_table"}:
+            score += 0.65
+            reasons.append("chunk_kind:reference_table")
+
+        if source_block_types and source_block_types.get("reference_table"):
+            score += 0.55
+            reasons.append("source_block_type:reference_table")
+
+        if unit_type in {"document", "title"} and len(hierarchy_path) <= 1 and len(normalized_text) < 320:
+            score += 0.35
+            reasons.append("short_top_level")
+
+        if re.search(r"\.{3,}|\bpag(?:ina)?\b", normalized_text) and len(normalized_text) < 800:
+            score += 0.35
+            reasons.append("toc_pattern")
+
+        if child_labels and len(child_labels) >= 8 and len(normalized_text) < 700:
+            score += 0.2
+            reasons.append("dense_child_listing")
+
+        score = round(min(1.0, score), 3)
+        return {
+            "is_boilerplate": score >= 0.75,
+            "boilerplate_score": score,
+            "boilerplate_reasons": reasons,
+        }
 
     def _branch_primary_kind(
         self,
