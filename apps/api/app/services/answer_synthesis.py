@@ -26,6 +26,9 @@ class AnswerSynthesisEvidence:
     selection_role: str
     path_text: str
     text: str
+    # Score crudo del cross-encoder. Se expone al modelo para que juzgue por
+    # relevancia medida y no por el orden en que recibe los pasajes.
+    relevance: float | None = None
 
 
 @dataclass
@@ -238,22 +241,20 @@ class AnswerSynthesisService:
 
         evidence_blocks = []
         for item in evidence_items:
-            evidence_blocks.append(
-                "\n".join(
-                    [
-                        f"{item.label}",
-                        f"unidad: {item.canonical_label}",
-                        f"rama: {item.branch_label}",
-                        f"tipo_unidad: {item.unit_type}",
-                        f"numero_unidad: {item.unit_number}",
-                        f"tipo: {item.chunk_kind}",
-                        f"rol: {item.evidence_role}",
-                        f"seleccion: {item.selection_role or 'candidate'}",
-                        f"ruta: {item.path_text}",
-                        f"texto: {item.text}",
-                    ]
-                )
-            )
+            lines = [
+                f"{item.label}",
+                f"unidad: {item.canonical_label}",
+                f"rama: {item.branch_label}",
+                f"tipo_unidad: {item.unit_type}",
+                f"numero_unidad: {item.unit_number}",
+                f"tipo: {item.chunk_kind}",
+                f"rol: {item.evidence_role}",
+                f"seleccion: {item.selection_role or 'candidate'}",
+            ]
+            if item.relevance is not None:
+                lines.append(f"relevancia: {item.relevance:.3f}")
+            lines.extend([f"ruta: {item.path_text}", f"texto: {item.text}"])
+            evidence_blocks.append("\n".join(lines))
 
         evidence_text = "\n\n".join(evidence_blocks)
         return (
@@ -266,8 +267,11 @@ class AnswerSynthesisService:
             "- No inventes hechos ni cites etiquetas no provistas.\n"
             "- Si la evidencia es parcial, dilo de forma breve.\n"
             "- Usa el rol de evidencia como senal: substantive suele ser mejor que reference o editorial para responder reglas, obligaciones o unidades canonicas.\n"
-            "- Usa el rol de seleccion como prioridad: primary > support > context.\n"
-            "- Resuelve primero la respuesta directa con la evidencia primary; luego usa support para justificar o precisar.\n"
+            "- El orden en que recibes la evidencia NO indica su importancia: guiate por el campo relevancia (0 a 1, medido por un reranker) y por el rol.\n"
+            "- Si un pasaje con relevancia alta responde la pregunta, usalo aunque aparezca al final de la lista.\n"
+            "- Usa el rol de seleccion como prioridad secundaria: primary > support > context.\n"
+            "- Resuelve primero la respuesta directa con la evidencia mas relevante; luego usa el resto para justificar o precisar.\n"
+            "- Si ningun pasaje responde realmente la pregunta, dilo de forma explicita en vez de redactar sobre lo mas parecido.\n"
             "- Usa context solo si agrega marco util sin desviar la respuesta principal.\n"
             "- Si solo hay una evidencia primary, la respuesta debe abrir con esa respuesta directa y no expandirse a materias vecinas salvo que sean necesarias.\n"
             "- Si una evidencia identifica explicitamente una unidad canonica que responde la pregunta (por ejemplo una seccion, articulo o recomendacion), prioriza esa unidad sobre otras evidencias que solo mencionan el tema de paso.\n"

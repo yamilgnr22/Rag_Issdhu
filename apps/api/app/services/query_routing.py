@@ -11,10 +11,16 @@ class QueryRoute:
     query_type: str
     target_classes: list[DocumentClass]
     decision_trace: list[str]
+    confidence: float = 1.0
+    # Cuando es False, target_classes se usa como preferencia y no como filtro
+    # excluyente: el router acierta 27/30, pero su confianza no separa aciertos de
+    # errores, y un error excluia por completo el documento correcto.
+    hard_class_filter: bool = True
 
 
 class QueryRoutingService:
     def __init__(self, settings=None) -> None:
+        self.settings = settings
         self.classifier = QueryRouterClassifier(settings) if settings is not None else None
 
     def route(self, *, question: str, filters: dict[str, object]) -> QueryRoute:
@@ -47,10 +53,20 @@ class QueryRoutingService:
         if self.classifier is not None:
             classification = self.classifier.classify(question=question)
             if classification is not None:
+                threshold = float(
+                    getattr(self.settings, "query_router_hard_filter_confidence", 1.0)
+                    if self.settings is not None
+                    else 1.0
+                )
+                hard = classification.confidence >= threshold
+                trace = list(classification.decision_trace)
+                trace.append(f"router:class_filter={'hard' if hard else 'soft'}")
                 return QueryRoute(
                     query_type=classification.query_type,
                     target_classes=classification.target_classes,
-                    decision_trace=list(classification.decision_trace),
+                    decision_trace=trace,
+                    confidence=classification.confidence,
+                    hard_class_filter=hard,
                 )
 
         return QueryRoute(

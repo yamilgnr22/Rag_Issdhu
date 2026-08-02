@@ -103,6 +103,10 @@ class RetrievalHit:
     sparse_score: float | None = None
     rrf_score: float = 0.0
     rerank_score: float = 0.0
+    # Score crudo del cross-encoder, antes de la normalizacion min-max. Es el
+    # unico valor con significado absoluto del pipeline: ~0.99 cuando la
+    # evidencia responde la pregunta, ~0.002 cuando no. Se usa para la confianza.
+    provider_rerank_score: float | None = None
 
 
 @dataclass
@@ -153,6 +157,41 @@ class CanonicalUnitBundle:
     unit_key: str
     candidate: CanonicalUnitCandidate
     hits: list[RetrievalHit]
+
+
+@dataclass
+class AnswerUnitCandidate:
+    unit_key: str
+    canonical_label: str
+    branch_label: str
+    block_key: str
+    block_label: str
+    document_id: str
+    version_id: str
+    path_text: str
+    unit_type: str
+    unit_number: str
+    evidence_role: str
+    best_hit: RetrievalHit
+    hits: list[RetrievalHit]
+    focus_score: float
+    rerank_score: float
+    base_score: float
+    text: str
+
+
+@dataclass
+class AnswerBlockCandidate:
+    block_key: str
+    block_label: str
+    document_id: str
+    version_id: str
+    path_text: str
+    unit_candidates: list[AnswerUnitCandidate]
+    focus_score: float
+    rerank_score: float
+    base_score: float
+    text: str
 
 
 class RetrievalService:
@@ -319,17 +358,23 @@ class RetrievalService:
             plan=plan,
         )
         decision_trace.extend(segment_trace)
-        reranked_hits, visibility_trace = self._apply_visibility_policy(
-            question=request.question,
-            route=route,
-            hits=reranked_hits,
-            branch_hits=branch_hits,
-            plan=plan,
-            evidence_intent=evidence_intent,
-            structure=structure,
-        )
-        decision_trace.extend(visibility_trace)
-        reranked_hits = self._diversify_hits(request.question, route, reranked_hits, plan)
+        if self.settings.retrieval_visibility_policy_enabled:
+            reranked_hits, visibility_trace = self._apply_visibility_policy(
+                question=request.question,
+                route=route,
+                hits=reranked_hits,
+                branch_hits=branch_hits,
+                plan=plan,
+                evidence_intent=evidence_intent,
+                structure=structure,
+            )
+            decision_trace.extend(visibility_trace)
+        else:
+            decision_trace.append("visibility:disabled")
+        if self.settings.retrieval_diversify_enabled:
+            reranked_hits = self._diversify_hits(request.question, route, reranked_hits, plan)
+        else:
+            decision_trace.append("diversify:disabled")
         final_hits = reranked_hits[: max(1, int(self.settings.retrieval_fused_top_k))]
         decision_trace.append(f"rerank:final={len(final_hits)}")
 
@@ -373,10 +418,68 @@ class RetrievalService:
             evidence_intent=evidence_intent,
             structure=structure,
         )
+        if self.settings.retrieval_answer_prioritization_enabled:
+            final_hits = self._prioritize_answer_hits(
+                answer_hits=answer_package.hits,
+                reranked_hits=reranked_hits,
+                limit=max(1, int(self.settings.retrieval_fused_top_k)),
+                anchor_limit=2 if plan.strategy == "multi_branch" else 1,
+            )
+        else:
+            decision_trace.append("answer_select:disabled")
+        decision_trace.append(f"answer_select:final={len(final_hits)}")
+
+        confidence, confidence_source = self._confidence(final_hits)
+        decision_trace.append(f"confidence:source={confidence_source}")
+        decision_trace.append(f"confidence:value={confidence}")
+
+        # Corte por evidencia debil: si ni el mejor pasaje supera el umbral, no
+        # tiene sentido pagar una llamada al LLM para que redacte sobre material
+        # que el cross-encoder considera irrelevante.
+        min_confidence = float(self.settings.answer_min_confidence)
+        if min_confidence > 0.0 and confidence < min_confidence:
+            decision_trace.append(f"answer:abstained_low_confidence<{min_confidence}")
+            citations = [
+                CitationContract(
+                    label=f"[{index}]",
+                    document_id=hit.document_id,
+                    version_id=hit.version_id,
+                    chunk_id=hit.chunk_id,
+                )
+                for index, hit in enumerate(final_hits[:3], start=1)
+            ]
+            response = QueryResponse(
+                answer=(
+                    "No se encontro evidencia suficiente en los documentos indexados para "
+                    "responder esta consulta. Se citan los pasajes mas cercanos por si "
+                    "ayudan a reformular la pregunta."
+                ),
+                citations=citations,
+                confidence=confidence,
+                applied_filters=request.filters,
+                rewrites_applied=rewrite_plan.applied,
+                decision_trace=decision_trace,
+                fallback_reason="low_confidence_evidence",
+                source_conflict=False,
+            )
+            return RetrievalRun(
+                request=request,
+                route=route,
+                decision_trace=decision_trace,
+                dense_hits=dense_hits,
+                sparse_hits=sparse_hits,
+                fused_hits=fused_hits,
+                final_hits=final_hits,
+                dense_reason=dense_reason,
+                sparse_reason=sparse_reason,
+                response=response,
+            )
+
         answer, answer_trace, used_answer_hits = self._compose_answer(
             request.question,
             answer_package.evidence_items,
             plan,
+            answer_form=answer_package.answer_form,
             answer_style=answer_package.answer_style,
             evidence_intent=evidence_intent,
         )
@@ -392,7 +495,6 @@ class RetrievalService:
             )
             for index, hit in enumerate(citation_hits, start=1)
         ]
-        confidence = self._confidence(final_hits)
         source_conflict = len({hit.document_id for hit in final_hits[:2]}) > 1
         fallback_reason = None
         if dense_reason and not sparse_reason:
@@ -422,6 +524,54 @@ class RetrievalService:
             sparse_reason=sparse_reason,
             response=response,
         )
+
+    def _prioritize_answer_hits(
+        self,
+        *,
+        answer_hits: list[RetrievalHit],
+        reranked_hits: list[RetrievalHit],
+        limit: int,
+        anchor_limit: int,
+    ) -> list[RetrievalHit]:
+        anchor_hits: list[RetrievalHit] = []
+        anchor_units: set[str] = set()
+        for hit in reranked_hits:
+            unit_identity = self._answer_hit_identity(hit)
+            if unit_identity in anchor_units:
+                continue
+            anchor_units.add(unit_identity)
+            anchor_hits.append(hit)
+            if len(anchor_hits) >= max(0, anchor_limit):
+                break
+
+        merged: list[RetrievalHit] = []
+        seen_units: set[str] = set()
+        seen_chunks: set[str] = set()
+        for hit in [*anchor_hits, *answer_hits, *reranked_hits]:
+            unit_identity = self._answer_hit_identity(hit)
+            if unit_identity in seen_units or hit.chunk_id in seen_chunks:
+                continue
+            seen_units.add(unit_identity)
+            seen_chunks.add(hit.chunk_id)
+            merged.append(hit)
+            if len(merged) >= limit:
+                break
+        return merged
+
+    def _answer_hit_identity(self, hit: RetrievalHit) -> str:
+        unit_key = self._answer_unit_group_key(hit)
+        if unit_key:
+            return f"unit:{unit_key}"
+        branch_key = self._branch_key_for_hit(hit)
+        if branch_key:
+            return f"branch:{branch_key}"
+        payload = hit.payload or {}
+        path_text = str(payload.get("path_text") or "").strip()
+        canonical_label = str(payload.get("canonical_label") or "").strip()
+        if path_text or canonical_label:
+            identity = path_text or canonical_label
+            return f"path:{hit.document_id}:{hit.version_id}:{self._normalize(identity)}"
+        return f"chunk:{hit.chunk_id}"
 
     def _apply_query_variants(
         self,
@@ -557,7 +707,9 @@ class RetrievalService:
                             route,
                             branch_keys=branch_keys,
                         ),
-                        "should": reference_clauses + phrase_clauses,
+                        "should": reference_clauses
+                        + phrase_clauses
+                        + self._class_preference_clauses(route),
                     }
                 },
             }
@@ -1345,6 +1497,9 @@ class RetrievalService:
             if hit is None or chunk_id in seen:
                 continue
             provider_boost = normalized_scores.get(chunk_id, 0.0)
+            raw_score = outcome.scores.get(chunk_id)
+            if raw_score is not None:
+                hit.provider_rerank_score = float(raw_score)
             positional_boost = 1.0 - ((rank - 1) / max(1, len(candidates)))
             role_alignment = self._evidence_role_alignment_score(evidence_intent, hit)
             hit.rerank_score = hit.rerank_score + provider_boost + (0.25 * positional_boost) + (0.15 * role_alignment)
@@ -2026,6 +2181,7 @@ class RetrievalService:
         evidence_items: list[AnswerSynthesisEvidence],
         plan: QueryPlan,
         *,
+        answer_form: str,
         answer_style: str,
         evidence_intent: EvidenceIntentClassification,
     ) -> tuple[str, list[str], list[RetrievalHit]]:
@@ -2043,7 +2199,7 @@ class RetrievalService:
             self._compose_extractive_from_evidence_items(
                 evidence_items,
                 answer_style,
-                answer_form="unknown",
+                answer_form=answer_form,
             ),
             ["answer:provider=extractive_fallback"],
             [],
@@ -2058,6 +2214,16 @@ class RetrievalService:
         evidence_intent: EvidenceIntentClassification,
         structure: QueryStructure,
     ) -> AnswerPackage:
+        block_package = self._build_answer_package_with_block_competition(
+            request=request,
+            hits=hits,
+            plan=plan,
+            evidence_intent=evidence_intent,
+            structure=structure,
+        )
+        if block_package is not None:
+            return block_package
+
         question = request.question
         candidate_hits = self._select_answer_hits(
             question,
@@ -2085,6 +2251,443 @@ class RetrievalService:
             answer_form="unknown",
             answer_style=plan.answer_style,
         )
+
+    def _build_answer_package_with_block_competition(
+        self,
+        *,
+        request: QueryRequest,
+        hits: list[RetrievalHit],
+        plan: QueryPlan,
+        evidence_intent: EvidenceIntentClassification,
+        structure: QueryStructure,
+    ) -> AnswerPackage | None:
+        candidate_hits = self._candidate_hits_for_block_competition(hits, plan=plan)
+        if not candidate_hits:
+            return None
+
+        unit_candidates = self._build_answer_unit_candidates(
+            question=request.question,
+            hits=candidate_hits,
+            evidence_intent=evidence_intent,
+        )
+        if not unit_candidates:
+            return None
+
+        block_candidates = self._build_answer_block_candidates(unit_candidates)
+        if not block_candidates:
+            return None
+
+        ordered_blocks, block_trace = self._rerank_answer_block_candidates(
+            question=request.question,
+            blocks=block_candidates,
+        )
+        selected_hits, selection_roles, selection_meta, selection_trace = self._select_hits_via_block_competition(
+            question=request.question,
+            plan=plan,
+            structure=structure,
+            ordered_blocks=ordered_blocks,
+            evidence_intent=evidence_intent,
+        )
+        if not selected_hits:
+            return None
+
+        answer_form = "direct_unit"
+        answer_style = "single_branch"
+        if selection_meta["block_count"] > 1:
+            answer_form = "global_summary" if plan.strategy == "global" else "unit_set"
+            answer_style = (
+                plan.answer_style
+                if plan.answer_style in {"grouped_by_branch", "summary"}
+                else "grouped_by_branch"
+            )
+        elif selection_meta["unit_count"] > 1:
+            answer_form = "unit_set"
+            answer_style = "single_branch"
+
+        evidence_items = self._answer_evidence_items_for_block_selection(
+            question=request.question,
+            hits=selected_hits,
+            selection_roles=selection_roles,
+        )
+        decision_trace = [
+            "answer_form:provider=block_competition",
+            f"answer_form:value={answer_form}",
+            f"answer_blocks:candidates={len(block_candidates)}",
+            f"answer_blocks:selected={selection_meta['block_count']}",
+            f"answer_units:selected={selection_meta['unit_count']}",
+            f"answer_candidates={len(selected_hits)}",
+            *block_trace,
+            *selection_trace,
+        ]
+        return AnswerPackage(
+            hits=selected_hits,
+            evidence_items=evidence_items,
+            label_to_hit={
+                item.label: hit for item, hit in zip(evidence_items, selected_hits, strict=False)
+            },
+            decision_trace=decision_trace,
+            answer_form=answer_form,
+            answer_style=answer_style,
+        )
+
+    def _candidate_hits_for_block_competition(
+        self,
+        hits: list[RetrievalHit],
+        *,
+        plan: QueryPlan,
+    ) -> list[RetrievalHit]:
+        if not hits:
+            return []
+        limit = 32 if plan.strategy == "global" else 28
+        candidate_hits: list[RetrievalHit] = []
+        seen_chunks: set[str] = set()
+        for hit in hits:
+            if hit.chunk_id in seen_chunks:
+                continue
+            seen_chunks.add(hit.chunk_id)
+            chunk_kind = str((hit.payload or {}).get("chunk_kind") or "").strip().lower()
+            if chunk_kind == "document":
+                continue
+            candidate_hits.append(hit)
+            if len(candidate_hits) >= limit:
+                break
+        return candidate_hits
+
+    def _build_answer_unit_candidates(
+        self,
+        *,
+        question: str,
+        hits: list[RetrievalHit],
+        evidence_intent: EvidenceIntentClassification,
+    ) -> list[AnswerUnitCandidate]:
+        grouped: dict[str, list[RetrievalHit]] = {}
+        for hit in hits:
+            unit_key = self._answer_unit_group_key(hit)
+            if not unit_key:
+                continue
+            grouped.setdefault(unit_key, []).append(hit)
+
+        unit_candidates: list[AnswerUnitCandidate] = []
+        for unit_key, unit_hits in grouped.items():
+            ordered_hits = sorted(
+                unit_hits,
+                key=lambda current: (
+                    self._answer_focus_score(question, current),
+                    self._evidence_role_alignment_score(evidence_intent, current),
+                    current.rerank_score,
+                ),
+                reverse=True,
+            )
+            best_hit = ordered_hits[0]
+            payload = best_hit.payload or {}
+            block_label, block_key = self._answer_block_identity_for_hit(best_hit)
+            if not block_key:
+                continue
+            focus_score = round(self._answer_focus_score(question, best_hit), 4)
+            rerank_score = round(float(best_hit.rerank_score), 4)
+            base_score = (
+                rerank_score
+                + (0.45 * focus_score)
+                + self._evidence_role_alignment_score(evidence_intent, best_hit)
+                + min(0.25, 0.05 * len(ordered_hits))
+            )
+            unit_candidates.append(
+                AnswerUnitCandidate(
+                    unit_key=unit_key,
+                    canonical_label=str(
+                        payload.get("canonical_label") or self._display_branch_label(best_hit)
+                    ).strip(),
+                    branch_label=self._display_branch_label(best_hit),
+                    block_key=block_key,
+                    block_label=block_label,
+                    document_id=best_hit.document_id,
+                    version_id=best_hit.version_id,
+                    path_text=str(payload.get("path_text") or "").strip(),
+                    unit_type=str(payload.get("unit_type") or "").strip(),
+                    unit_number=str(payload.get("unit_number") or "").strip(),
+                    evidence_role=str(payload.get("evidence_role") or "").strip(),
+                    best_hit=best_hit,
+                    hits=ordered_hits,
+                    focus_score=focus_score,
+                    rerank_score=rerank_score,
+                    base_score=round(base_score, 4),
+                    text=self._answer_unit_candidate_text(question=question, hits=ordered_hits),
+                )
+            )
+        unit_candidates.sort(key=lambda current: current.base_score, reverse=True)
+        return unit_candidates
+
+    def _answer_block_identity_for_hit(self, hit: RetrievalHit) -> tuple[str, str]:
+        payload = hit.payload or {}
+        parent_path, _ = self._parent_path_spec_for_hit(hit)
+        path_text = str(payload.get("path_text") or "").strip()
+        canonical_label = str(payload.get("canonical_label") or "").strip()
+        block_label = parent_path or path_text or canonical_label or self._display_branch_label(hit)
+        block_key = f"{hit.document_id}:{hit.version_id}:{self._normalize(block_label)}"
+        return block_label, block_key
+
+    def _answer_unit_candidate_text(self, *, question: str, hits: list[RetrievalHit]) -> str:
+        best_hit = hits[0]
+        payload = best_hit.payload or {}
+        snippets: list[str] = []
+        for hit in hits[:2]:
+            snippet = self._question_focused_evidence_text(question, hit, limit=220)
+            if snippet:
+                snippets.append(snippet)
+        path_text = str(payload.get("path_text") or "").strip()
+        document_title = str(payload.get("document_title") or "").strip()
+        canonical_label = str(payload.get("canonical_label") or self._display_branch_label(best_hit)).strip()
+        return "\n".join(
+            part
+            for part in [
+                f"documento: {document_title}" if document_title else "",
+                f"unidad: {canonical_label}" if canonical_label else "",
+                f"ruta: {path_text}" if path_text else "",
+                *[f"evidencia: {snippet}" for snippet in snippets],
+            ]
+            if part
+        )
+
+    def _build_answer_block_candidates(
+        self,
+        unit_candidates: list[AnswerUnitCandidate],
+    ) -> list[AnswerBlockCandidate]:
+        grouped: dict[str, list[AnswerUnitCandidate]] = {}
+        for candidate in unit_candidates:
+            grouped.setdefault(candidate.block_key, []).append(candidate)
+
+        block_candidates: list[AnswerBlockCandidate] = []
+        for block_key, members in grouped.items():
+            ordered_members = sorted(members, key=lambda current: current.base_score, reverse=True)
+            first = ordered_members[0]
+            focus_score = round(max(member.focus_score for member in ordered_members), 4)
+            rerank_score = round(max(member.rerank_score for member in ordered_members), 4)
+            base_score = rerank_score + (0.45 * focus_score) + min(0.3, 0.06 * len(ordered_members))
+            block_candidates.append(
+                AnswerBlockCandidate(
+                    block_key=block_key,
+                    block_label=first.block_label,
+                    document_id=first.document_id,
+                    version_id=first.version_id,
+                    path_text=first.block_label,
+                    unit_candidates=ordered_members,
+                    focus_score=focus_score,
+                    rerank_score=rerank_score,
+                    base_score=round(base_score, 4),
+                    text=self._answer_block_candidate_text(ordered_members),
+                )
+            )
+        block_candidates.sort(key=lambda current: current.base_score, reverse=True)
+        return block_candidates
+
+    def _answer_block_candidate_text(self, unit_candidates: list[AnswerUnitCandidate]) -> str:
+        first = unit_candidates[0]
+        top_units = " | ".join(candidate.canonical_label for candidate in unit_candidates[:4] if candidate.canonical_label)
+        snippets = [
+            f"{candidate.canonical_label}: {self._compress_text(candidate.text, 260)}"
+            for candidate in unit_candidates[:3]
+        ]
+        return "\n".join(
+            part
+            for part in [
+                f"bloque: {first.block_label}" if first.block_label else "",
+                f"ruta: {first.path_text}" if first.path_text else "",
+                f"unidades: {top_units}" if top_units else "",
+                *snippets,
+            ]
+            if part
+        )
+
+    def _rerank_answer_block_candidates(
+        self,
+        *,
+        question: str,
+        blocks: list[AnswerBlockCandidate],
+    ) -> tuple[list[AnswerBlockCandidate], list[str]]:
+        if not blocks:
+            return [], ["answer_blocks:provider=empty", "answer_blocks:ordered=0"]
+
+        seeded = sorted(blocks, key=lambda current: current.base_score, reverse=True)
+        documents = [
+            RerankDocument(key=block.block_key, text=block.text)
+            for block in seeded
+        ]
+        outcome = self.reranker.rerank(question=question, documents=documents)
+        ordered = self._blend_rerank_with_base(
+            candidates=seeded,
+            key_fn=lambda candidate: candidate.block_key,
+            base_score_fn=lambda candidate: candidate.base_score,
+            provider_scores=outcome.scores,
+        )
+        if not ordered:
+            ordered = seeded
+        trace = [
+            f"answer_blocks:provider={outcome.source}",
+            f"answer_blocks:candidates={len(blocks)}",
+            f"answer_blocks:ordered={len(ordered)}",
+        ]
+        if outcome.reason:
+            trace.append(f"answer_blocks:reason={outcome.reason}")
+        return ordered, trace
+
+    def _rerank_answer_unit_candidates(
+        self,
+        *,
+        question: str,
+        unit_candidates: list[AnswerUnitCandidate],
+    ) -> tuple[list[AnswerUnitCandidate], list[str]]:
+        if not unit_candidates:
+            return [], ["answer_units:provider=empty", "answer_units:ordered=0"]
+
+        seeded = sorted(unit_candidates, key=lambda current: current.base_score, reverse=True)
+        documents = [
+            RerankDocument(key=candidate.unit_key, text=candidate.text)
+            for candidate in seeded
+        ]
+        outcome = self.reranker.rerank(question=question, documents=documents)
+        ordered = self._blend_rerank_with_base(
+            candidates=seeded,
+            key_fn=lambda candidate: candidate.unit_key,
+            base_score_fn=lambda candidate: candidate.base_score,
+            provider_scores=outcome.scores,
+        )
+        if not ordered:
+            ordered = seeded
+        trace = [
+            f"answer_units:provider={outcome.source}",
+            f"answer_units:candidates={len(unit_candidates)}",
+            f"answer_units:ordered={len(ordered)}",
+        ]
+        if outcome.reason:
+            trace.append(f"answer_units:reason={outcome.reason}")
+        return ordered, trace
+
+    def _blend_rerank_with_base(
+        self,
+        *,
+        candidates,
+        key_fn,
+        base_score_fn,
+        provider_scores: dict[str, float],
+    ):
+        if not candidates:
+            return []
+
+        max_base = max(float(base_score_fn(candidate)) for candidate in candidates) or 1.0
+        provider_values = [float(provider_scores.get(key_fn(candidate), 0.0)) for candidate in candidates]
+        max_provider = max(provider_values) if any(provider_values) else 1.0
+
+        return sorted(
+            candidates,
+            key=lambda candidate: (
+                0.72 * (float(base_score_fn(candidate)) / max_base)
+                + 0.28 * (float(provider_scores.get(key_fn(candidate), 0.0)) / max_provider),
+                float(base_score_fn(candidate)),
+            ),
+            reverse=True,
+        )
+
+    def _select_hits_via_block_competition(
+        self,
+        *,
+        question: str,
+        plan: QueryPlan,
+        structure: QueryStructure,
+        ordered_blocks: list[AnswerBlockCandidate],
+        evidence_intent: EvidenceIntentClassification,
+    ) -> tuple[list[RetrievalHit], dict[str, str], dict[str, int], list[str]]:
+        del structure
+        if not ordered_blocks:
+            return [], {}, {"block_count": 0, "unit_count": 0}, ["answer_select:blocks=0"]
+
+        block_limit = {"focal": 1, "multi_branch": 2, "global": 3}.get(plan.strategy, 1)
+        selected_blocks = ordered_blocks[:block_limit]
+        selected_hits: list[RetrievalHit] = []
+        selection_roles: dict[str, str] = {}
+        seen_chunks: set[str] = set()
+        selected_unit_count = 0
+        trace = [f"answer_select:blocks={len(selected_blocks)}"]
+
+        for block_index, block in enumerate(selected_blocks):
+            ordered_units, unit_trace = self._rerank_answer_unit_candidates(
+                question=question,
+                unit_candidates=block.unit_candidates,
+            )
+            trace.extend(unit_trace)
+            if not ordered_units:
+                continue
+
+            if plan.strategy == "focal":
+                unit_limit = 2
+            elif plan.strategy == "multi_branch":
+                unit_limit = 1 if block_index > 0 else 2
+            else:
+                unit_limit = 1
+
+            selected_units = ordered_units[:unit_limit]
+            selected_unit_count += len(selected_units)
+            for unit_index, unit in enumerate(selected_units):
+                hit = unit.best_hit
+                if hit.chunk_id in seen_chunks:
+                    continue
+                seen_chunks.add(hit.chunk_id)
+                selected_hits.append(hit)
+                if block_index == 0 and unit_index == 0:
+                    selection_roles[hit.chunk_id] = "primary"
+                elif plan.strategy == "focal":
+                    selection_roles[hit.chunk_id] = "support"
+                elif plan.strategy == "multi_branch" and block_index == 0:
+                    selection_roles[hit.chunk_id] = "support"
+                else:
+                    selection_roles[hit.chunk_id] = "context"
+                payload = hit.payload or {}
+                payload["answer_block_label"] = block.block_label
+
+        if not selected_hits and ordered_blocks:
+            fallback = ordered_blocks[0].unit_candidates[0].best_hit
+            selected_hits = [fallback]
+            selection_roles[fallback.chunk_id] = "primary"
+            selected_unit_count = 1
+
+        if selected_hits:
+            trace.append(f"answer_select:units={selected_unit_count}")
+            trace.append(f"answer_select:hits={len(selected_hits)}")
+            trace.append(
+                "answer_select:intent="
+                + str(evidence_intent.intent or "mixed")
+            )
+        return selected_hits, selection_roles, {"block_count": len(selected_blocks), "unit_count": selected_unit_count}, trace
+
+    def _answer_evidence_items_for_block_selection(
+        self,
+        *,
+        question: str,
+        hits: list[RetrievalHit],
+        selection_roles: dict[str, str],
+    ) -> list[AnswerSynthesisEvidence]:
+        evidence_items: list[AnswerSynthesisEvidence] = []
+        for index, hit in enumerate(hits, start=1):
+            payload = hit.payload or {}
+            block_label = str(payload.get("answer_block_label") or self._display_branch_label(hit)).strip()
+            chunk_kind = str(payload.get("chunk_kind") or payload.get("unit_type") or "chunk").strip() or "chunk"
+            evidence_items.append(
+                AnswerSynthesisEvidence(
+                    label=f"[{index}]",
+                    canonical_label=str(
+                        payload.get("canonical_label") or self._display_branch_label(hit)
+                    ).strip(),
+                    branch_label=block_label,
+                    unit_type=str(payload.get("unit_type") or "").strip(),
+                    unit_number=str(payload.get("unit_number") or "").strip(),
+                    chunk_kind=chunk_kind,
+                    evidence_role=str(payload.get("evidence_role") or "").strip(),
+                    selection_role=selection_roles.get(hit.chunk_id, ""),
+                    path_text=str(payload.get("path_text") or "").strip(),
+                    text=self._question_focused_evidence_text(question, hit, limit=650),
+                    relevance=hit.provider_rerank_score,
+                )
+            )
+        return evidence_items
 
     def _compose_extractive_answer(self, hits: list[RetrievalHit], plan: QueryPlan) -> str:
         if plan.answer_style in {"grouped_by_branch", "summary"}:
@@ -2133,6 +2736,28 @@ class RetrievalService:
                 support = supports[0]
                 answer += f" Como apoyo, {self._compress_text(support.text, 200)} {support.label}".strip()
             return answer
+        if answer_form == "unit_set":
+            primaries = [
+                item
+                for item in evidence_items
+                if item.selection_role in {"primary", "support"}
+            ] or evidence_items[:3]
+            labels = [item.canonical_label for item in primaries[:3] if item.canonical_label]
+            if labels:
+                answer = (
+                    "Las unidades mas centrales para responder la pregunta son "
+                    + ", ".join(labels[:-1])
+                    + (" y " + labels[-1] if len(labels) > 1 else labels[0])
+                    + "."
+                )
+            else:
+                answer = self._compress_text(primaries[0].text, 320)
+            if primaries:
+                answer += " " + " ".join(
+                    f"{item.label} {self._compress_text(item.text, 180)}"
+                    for item in primaries[:2]
+                )
+            return answer.strip()
         if answer_style == "single_branch":
             primary = next(
                 (item for item in evidence_items if item.selection_role == "primary"),
@@ -2222,6 +2847,7 @@ class RetrievalService:
                     selection_role=(selection_roles or {}).get(hit.chunk_id, ""),
                     path_text=str(payload.get("path_text") or ""),
                     text=self._question_focused_evidence_text(question, hit, limit=650),
+                    relevance=hit.provider_rerank_score,
                 )
             )
         return evidence_items
@@ -3047,9 +3673,31 @@ class RetrievalService:
             seen_chunks.add(hit.chunk_id)
         return selected
 
-    def _confidence(self, hits: list[RetrievalHit]) -> float:
-        top_score = hits[0].rerank_score if hits else 0.0
-        return round(min(0.95, 0.35 + top_score * 3.0), 2)
+    def _confidence(self, hits: list[RetrievalHit]) -> tuple[float, str]:
+        """Confianza basada en el score crudo del cross-encoder.
+
+        La formula anterior (0.35 + rerank_score*3) saturaba en 0.95 casi
+        siempre, incluso cuando la respuesta era "no hay evidencia". El score del
+        proveedor sí discrimina: ~0.99 cuando la evidencia responde, ~0.002
+        cuando no. Se toma el maximo de los hits finales, no el del primero,
+        porque las etapas de reordenamiento pueden no dejar arriba al mejor.
+        """
+        if not hits:
+            return 0.0, "no_hits"
+
+        provider_scores = [
+            hit.provider_rerank_score
+            for hit in hits
+            if hit.provider_rerank_score is not None
+        ]
+        if provider_scores:
+            best = max(provider_scores)
+            return round(min(0.95, max(0.01, float(best))), 2), "provider_rerank"
+
+        # Sin proveedor de rerank (modo off o fallback heuristico) no hay señal
+        # con significado absoluto: se conserva la formula historica.
+        top_score = hits[0].rerank_score
+        return round(min(0.95, 0.35 + top_score * 3.0), 2), "heuristic_fallback"
 
     def _build_qdrant_filter(
         self,
@@ -3063,7 +3711,7 @@ class RetrievalService:
         ]
         should: list[dict[str, object]] = []
         class_values = route.target_classes
-        if class_values:
+        if class_values and getattr(route, "hard_class_filter", True):
             if len(class_values) == 1:
                 must.append({"key": "document_class", "match": {"value": class_values[0]}})
             else:
@@ -3086,6 +3734,16 @@ class RetrievalService:
             filter_body["should"] = should
         return filter_body
 
+    def _class_preference_clauses(self, route: QueryRoute) -> list[dict[str, object]]:
+        """Cuando el filtro de clase es suave, la clase predicha se degrada a
+        preferencia: suma score sin excluir al resto del corpus."""
+        if getattr(route, "hard_class_filter", True):
+            return []
+        class_values = route.target_classes
+        if not class_values:
+            return []
+        return [{"terms": {"document_class": list(class_values), "boost": 2.0}}]
+
     def _build_opensearch_filters(
         self,
         filters: dict[str, object],
@@ -3095,7 +3753,7 @@ class RetrievalService:
     ) -> list[dict[str, object]]:
         clauses: list[dict[str, object]] = [{"term": {"version_status": "active"}}]
         class_values = route.target_classes
-        if class_values:
+        if class_values and getattr(route, "hard_class_filter", True):
             clauses.append({"terms": {"document_class": class_values}})
         if branch_keys:
             clauses.append({"terms": {"branch_keys": branch_keys}})

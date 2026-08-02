@@ -65,6 +65,10 @@ class Settings(BaseSettings):
         default="apps/api/app/evals/retrieval_eval_cases.json"
     )
     query_router_classifier_min_confidence: float = Field(default=0.45)
+    # Por encima de este umbral la clase predicha filtra de forma excluyente; por
+    # debajo se usa solo como preferencia, para que un error de routing no deje
+    # fuera de la busqueda al documento correcto.
+    query_router_hard_filter_confidence: float = Field(default=0.95)
     branch_centrality_scorer_enabled: bool = Field(default=True)
     branch_centrality_fixture_path: str = Field(
         default="apps/api/app/evals/answer_form_train_seed_cases.json"
@@ -88,6 +92,12 @@ class Settings(BaseSettings):
     query_planner_local_model: str | None = Field(default=None)
     query_planner_local_timeout: float | None = Field(default=20.0)
     answer_synthesis_mode: Literal["off", "local_llm", "cloud_llm", "hybrid"] = Field(default="cloud_llm")
+    # Corte por evidencia debil: por debajo de este valor el sistema se abstiene
+    # sin llamar al LLM. DESACTIVADO (0.0) por defecto tras medirlo: la confianza
+    # de casos contestables baja hasta 0.03 y la de preguntas sin respuesta sube
+    # hasta 0.95, asi que no existe umbral que separe ambos grupos. Con 0.5 se
+    # perdian 2 respuestas correctas de 30. Ver docs/fase0_baseline_honesto.md.
+    answer_min_confidence: float = Field(default=0.0)
     answer_synthesis_cloud_base_url: str | None = Field(default=None)
     answer_synthesis_cloud_api_key: str | None = Field(default=None)
     answer_synthesis_cloud_model: str | None = Field(default=None)
@@ -128,6 +138,12 @@ class Settings(BaseSettings):
     retrieval_sparse_top_k: int = Field(default=12)
     retrieval_fused_top_k: int = Field(default=8)
     retrieval_rrf_k: int = Field(default=60)
+    # Etapas que reordenan despues del reranker. Se exponen como flags para poder
+    # medir su aporte por separado contra el fixture honesto; el default conserva
+    # el comportamiento historico.
+    retrieval_visibility_policy_enabled: bool = Field(default=True)
+    retrieval_diversify_enabled: bool = Field(default=True)
+    retrieval_answer_prioritization_enabled: bool = Field(default=True)
     rerank_mode: Literal["off", "local", "cohere"] = Field(default="local")
     rerank_top_n: int = Field(default=24)
     rerank_local_base_url: str | None = Field(default=None)
