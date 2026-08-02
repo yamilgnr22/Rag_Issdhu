@@ -33,6 +33,42 @@ class ExtractionResult:
 
 
 class DoclingExtractor:
+    def __init__(self, settings: Settings | None = None) -> None:
+        self.settings = settings
+
+    def _ocr_languages(self) -> list[str]:
+        raw = getattr(self.settings, "ocr_language", None) or "spa+eng"
+        return [part.strip() for part in re.split(r"[+,\s]+", raw) if part.strip()]
+
+    def _has_text_layer(self, content: bytes) -> bool:
+        """True si el PDF trae texto embebido. Un PDF escaneado devuelve False y
+        necesita OCR con el idioma correcto: sin idioma, el motor pierde tildes y
+        pega las palabras."""
+        try:
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                pages = pdf.pages
+                if not pages:
+                    return False
+                sample = [pages[index] for index in range(0, len(pages), max(1, len(pages) // 8))]
+                return any(len((page.extract_text() or "").strip()) > 80 for page in sample)
+        except Exception:
+            return True
+
+    def _build_converter(self, *, needs_ocr: bool):
+        from docling.document_converter import DocumentConverter, PdfFormatOption
+        from docling.datamodel.base_models import InputFormat
+        from docling.datamodel.pipeline_options import PdfPipelineOptions, TesseractCliOcrOptions
+
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.do_ocr = True
+        pipeline_options.ocr_options = TesseractCliOcrOptions(
+            lang=self._ocr_languages(),
+            force_full_page_ocr=needs_ocr,
+        )
+        return DocumentConverter(
+            format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)}
+        )
+
     def extract(self, filename: str, content: bytes) -> ExtractionResult | None:
         try:
             from docling.document_converter import DocumentConverter
@@ -48,17 +84,26 @@ class DoclingExtractor:
         temp_path = temp_dir / f"docling_{Path(filename).name}"
         temp_path.write_bytes(content)
 
+        is_pdf = suffix == ".pdf"
+        needs_ocr = is_pdf and not self._has_text_layer(content)
+
         try:
-            converter = DocumentConverter()
+            try:
+                converter = self._build_converter(needs_ocr=needs_ocr) if is_pdf else DocumentConverter()
+            except Exception:
+                converter = DocumentConverter()
             result = converter.convert(str(temp_path))
             document = result.document
             markdown = document.export_to_markdown().strip()
             if not markdown:
                 return None
             review_required = len(markdown) < 50
+            backend = "docling"
+            if needs_ocr:
+                backend = f"docling+ocr[{'+'.join(self._ocr_languages())}]"
             return ExtractionResult(
                 blocks=[ExtractionBlock("docling_markdown", markdown, 1, ["Document"])],
-                backend="docling",
+                backend=backend,
                 review_required=review_required,
                 review_reason="docling_extracted_too_little_text" if review_required else None,
             )
@@ -195,7 +240,7 @@ class FallbackExtractor:
 
 class ExtractionPipeline:
     def __init__(self, settings: Settings) -> None:
-        self.docling = DoclingExtractor()
+        self.docling = DoclingExtractor(settings)
         self.fallback = FallbackExtractor(settings)
 
     def extract(self, filename: str, content: bytes) -> ExtractionResult:
