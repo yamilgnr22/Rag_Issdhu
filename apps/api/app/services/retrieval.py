@@ -356,6 +356,7 @@ class RetrievalService:
         )
         decision_trace.extend(rerank_trace)
         reranked_hits, segment_trace = self._attach_relevant_segments(
+            request=request,
             question=request.question,
             hits=reranked_hits,
             structure=structure,
@@ -592,6 +593,7 @@ class RetrievalService:
             subrequest = QueryRequest(
                 question=query,
                 user_identity=request.user_identity,
+                user_groups=request.user_groups,
                 filters=request.filters,
                 conversation_context=request.conversation_context,
             )
@@ -617,6 +619,7 @@ class RetrievalService:
             subrequest = QueryRequest(
                 question=query,
                 user_identity=request.user_identity,
+                user_groups=request.user_groups,
                 filters=request.filters,
                 conversation_context=request.conversation_context,
             )
@@ -639,6 +642,7 @@ class RetrievalService:
             subrequest = QueryRequest(
                 question=query,
                 user_identity=request.user_identity,
+                user_groups=request.user_groups,
                 filters=request.filters,
                 conversation_context=request.conversation_context,
             )
@@ -662,7 +666,9 @@ class RetrievalService:
                 "limit": int(self.settings.retrieval_dense_top_k),
                 "with_payload": True,
             }
-            filter_body = self._build_qdrant_filter(request.filters, route, branch_keys=branch_keys)
+            filter_body = self._build_qdrant_filter(
+                request.filters, route, branch_keys=branch_keys, request=request
+            )
             if filter_body:
                 body["filter"] = filter_body
             payload = self._qdrant_search(body=body)
@@ -716,6 +722,7 @@ class RetrievalService:
                             request.filters,
                             route,
                             branch_keys=branch_keys,
+                            request=request,
                         ),
                         "should": reference_clauses
                         + phrase_clauses
@@ -751,6 +758,7 @@ class RetrievalService:
             subrequest = QueryRequest(
                 question=query,
                 user_identity=request.user_identity,
+                user_groups=request.user_groups,
                 filters=request.filters,
                 conversation_context=request.conversation_context,
             )
@@ -857,6 +865,7 @@ class RetrievalService:
                 request.filters,
                 route,
                 parent_branch_keys=parent_branch_keys,
+                request=request,
             )
             if filter_body:
                 body["filter"] = filter_body
@@ -909,6 +918,7 @@ class RetrievalService:
                             request.filters,
                             route,
                             parent_branch_keys=parent_branch_keys,
+                            request=request,
                         ),
                         "should": reference_clauses + phrase_clauses,
                     }
@@ -1087,6 +1097,7 @@ class RetrievalService:
         subrequest = QueryRequest(
             question=question,
             user_identity=request.user_identity,
+                user_groups=request.user_groups,
             filters=request.filters,
             conversation_context=request.conversation_context,
         )
@@ -1135,6 +1146,7 @@ class RetrievalService:
                                 request.filters,
                                 route,
                                 parent_branch_keys=parent_branch_keys,
+                                request=request,
                             ),
                         }
                     },
@@ -1153,7 +1165,7 @@ class RetrievalService:
                     "query": {
                         "bool": {
                             "filter": [
-                                *self._build_opensearch_filters(request.filters, route),
+                                *self._build_opensearch_filters(request.filters, route, request=request),
                                 {"term": {"branch_depth": parent_depth + 1}},
                             ],
                             "must": [
@@ -1599,6 +1611,7 @@ class RetrievalService:
     def _attach_relevant_segments(
         self,
         *,
+        request: QueryRequest,
         question: str,
         hits: list[RetrievalHit],
         structure: QueryStructure,
@@ -1615,6 +1628,7 @@ class RetrievalService:
 
         for hit in hits[:candidate_limit]:
             segment = self._build_evidence_segment(
+                request=request,
                 question=question,
                 hit=hit,
                 aspects=aspects,
@@ -1637,6 +1651,7 @@ class RetrievalService:
     def _build_evidence_segment(
         self,
         *,
+        request: QueryRequest,
         question: str,
         hit: RetrievalHit,
         aspects: list[str],
@@ -1660,6 +1675,7 @@ class RetrievalService:
         neighbor_hits = neighbor_cache.get(cache_key)
         if neighbor_hits is None:
             neighbor_hits = self._segment_neighbor_hits(
+                request=request,
                 hit=hit,
                 branch_key=branch_key,
                 start_order=cache_key[3],
@@ -1719,6 +1735,7 @@ class RetrievalService:
     def _segment_neighbor_hits(
         self,
         *,
+        request: QueryRequest,
         hit: RetrievalHit,
         branch_key: str,
         start_order: int,
@@ -1736,7 +1753,10 @@ class RetrievalService:
                             {"term": {"branch_keys": branch_key}},
                             {"range": {"chunk_order": {"gte": start_order, "lte": end_order}}},
                         ],
-                        "filter": [{"term": {"version_status": "active"}}],
+                        "filter": [
+                            {"term": {"version_status": "active"}},
+                            *([acl] if (acl := self._acl_opensearch_clause(request)) else []),
+                        ],
                     }
                 },
             }
@@ -3656,6 +3676,7 @@ class RetrievalService:
         probe_request = QueryRequest(
             question=unit_query,
             user_identity=request.user_identity,
+                user_groups=request.user_groups,
             filters=dict(request.filters),
             conversation_context=list(request.conversation_context),
         )
@@ -3736,16 +3757,50 @@ class RetrievalService:
         top_score = hits[0].rerank_score
         return round(min(0.95, 0.35 + top_score * 3.0), 2), "heuristic_fallback"
 
+    def _acl_qdrant_clause(self, request: QueryRequest) -> dict[str, object] | None:
+        """Un chunk es visible si nombra al usuario, si alcanza a alguno de sus
+        grupos, o si no declara restriccion alguna."""
+        if not self.settings.acl_enforcement_enabled:
+            return None
+        alternatives: list[dict[str, object]] = []
+        identity = (request.user_identity or "").strip()
+        if identity:
+            alternatives.append({"key": "acl_users", "match": {"any": [identity]}})
+        groups = [str(group).strip() for group in (request.user_groups or []) if str(group).strip()]
+        if groups:
+            alternatives.append({"key": "acl_groups", "match": {"any": groups}})
+        if self.settings.acl_open_when_unrestricted:
+            alternatives.append(
+                {
+                    "must": [
+                        {"is_empty": {"key": "acl_users"}},
+                        {"is_empty": {"key": "acl_groups"}},
+                    ]
+                }
+            )
+        if not alternatives:
+            # Sin identidad ni grupos y sin apertura por defecto: no ver nada es
+            # la respuesta correcta, no ver todo.
+            return {"must": [{"key": "acl_users", "match": {"any": ["__deny_all__"]}}]}
+        # Filtro anidado: en Qdrant un `should` ya exige al menos una coincidencia,
+        # y `min_should` no es valido en esta posicion (error 400).
+        return {"should": alternatives}
+
     def _build_qdrant_filter(
         self,
         filters: dict[str, object],
         route: QueryRoute,
         branch_keys: list[str] | None = None,
         parent_branch_keys: list[str] | None = None,
+        request: QueryRequest | None = None,
     ) -> dict[str, object] | None:
         must: list[dict[str, object]] = [
             {"key": "version_status", "match": {"value": "active"}},
         ]
+        if request is not None:
+            acl_clause = self._acl_qdrant_clause(request)
+            if acl_clause is not None:
+                must.append(acl_clause)
         should: list[dict[str, object]] = []
         class_values = route.target_classes
         if class_values and getattr(route, "hard_class_filter", True):
@@ -3781,14 +3836,46 @@ class RetrievalService:
             return []
         return [{"terms": {"document_class": list(class_values), "boost": 2.0}}]
 
+    def _acl_opensearch_clause(self, request: QueryRequest) -> dict[str, object] | None:
+        if not self.settings.acl_enforcement_enabled:
+            return None
+        alternatives: list[dict[str, object]] = []
+        identity = (request.user_identity or "").strip()
+        if identity:
+            alternatives.append({"terms": {"acl_users": [identity]}})
+        groups = [str(group).strip() for group in (request.user_groups or []) if str(group).strip()]
+        if groups:
+            alternatives.append({"terms": {"acl_groups": groups}})
+        if self.settings.acl_open_when_unrestricted:
+            # Un array vacio no indexa el campo, asi que "sin ACL" equivale a que
+            # ninguno de los dos campos exista.
+            alternatives.append(
+                {
+                    "bool": {
+                        "must_not": [
+                            {"exists": {"field": "acl_users"}},
+                            {"exists": {"field": "acl_groups"}},
+                        ]
+                    }
+                }
+            )
+        if not alternatives:
+            return {"bool": {"must_not": [{"match_all": {}}]}}
+        return {"bool": {"should": alternatives, "minimum_should_match": 1}}
+
     def _build_opensearch_filters(
         self,
         filters: dict[str, object],
         route: QueryRoute,
         branch_keys: list[str] | None = None,
         parent_branch_keys: list[str] | None = None,
+        request: QueryRequest | None = None,
     ) -> list[dict[str, object]]:
         clauses: list[dict[str, object]] = [{"term": {"version_status": "active"}}]
+        if request is not None:
+            acl_clause = self._acl_opensearch_clause(request)
+            if acl_clause is not None:
+                clauses.append(acl_clause)
         class_values = route.target_classes
         if class_values and getattr(route, "hard_class_filter", True):
             clauses.append({"terms": {"document_class": class_values}})

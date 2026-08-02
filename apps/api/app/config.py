@@ -146,6 +146,15 @@ class Settings(BaseSettings):
     # Etapas que reordenan despues del reranker. Se exponen como flags para poder
     # medir su aporte por separado contra el fixture honesto; el default conserva
     # el comportamiento historico.
+    # Control de acceso por documento. Las ACL se indexaban por chunk desde el
+    # principio, pero ninguna busqueda las aplicaba: cualquier usuario recuperaba
+    # cualquier documento (hallazgo C1 de la auditoria).
+    acl_enforcement_enabled: bool = Field(default=True)
+    # Documento sin acl_users ni acl_groups = visible para todos. El corpus
+    # actual esta asi, de modo que con True nada deja de funcionar y las ACL solo
+    # restringen a partir de que se declaran. Poner en False para exigir ACL
+    # explicita en todo documento (deny by default).
+    acl_open_when_unrestricted: bool = Field(default=True)
     retrieval_visibility_policy_enabled: bool = Field(default=True)
     retrieval_diversify_enabled: bool = Field(default=True)
     retrieval_answer_prioritization_enabled: bool = Field(default=True)

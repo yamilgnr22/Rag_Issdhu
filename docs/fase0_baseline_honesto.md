@@ -474,7 +474,64 @@ Advertencia sobre los precios: las cifras por token provienen de fuentes
 secundarias; openai.com devolvió 403 y no se pudo contrastar. Conviene
 verificarlas en el panel de facturación antes de tomarlas como definitivas.
 
-## 18. Orden recomendado para lo que queda
+## 18. Octava corrección: control de acceso aplicado (C1)
+
+Hallazgo C1 de la auditoría inicial, abierto desde el principio: las ACL se
+guardaban por documento y se indexaban por chunk (`acl_users`, `acl_groups`),
+pero **ninguna búsqueda las aplicaba**. Cualquier `user_identity` recuperaba
+cualquier documento. Confirmado como bloqueante: el ISSDHU tendrá áreas con
+acceso a distintos conjuntos documentales.
+
+Cambios:
+
+- `QueryRequest` gana `user_groups`. Antes solo llegaba `user_identity`, con lo
+  que no había forma de resolver pertenencia a un área.
+- `_acl_qdrant_clause` / `_acl_opensearch_clause`: un chunk es visible si nombra
+  al usuario en `acl_users`, si alcanza alguno de sus grupos en `acl_groups`, o
+  si no declara restricción. Se aplica en las **seis** construcciones de filtro
+  (densa, sparse, ramas y catálogo de ramas).
+- Los grupos se propagan a las seis subconsultas internas (variantes de
+  consulta, búsqueda guiada por rama), donde antes solo viajaba la identidad.
+- `acl_enforcement_enabled` (default `true`) y `acl_open_when_unrestricted`
+  (default `true`: documento sin ACL = público). El corpus actual tiene ACL
+  vacía en los 9 documentos, así que con este default nada deja de funcionar y
+  las restricciones aplican solo desde que se declaran. Poner en `false` para
+  exigir ACL explícita (deny by default).
+
+### Dos fallos encontrados al verificar, no al escribir
+
+1. **Qdrant devolvía HTTP 400.** `min_should` no es válido en esa posición en
+   Qdrant 1.13.4. Como un `should` ya exige al menos una coincidencia, se
+   eliminó. Sin la prueba de integración esto habría dejado la búsqueda densa
+   caída en silencio.
+2. **`_segment_neighbor_hits` consultaba OpenSearch sin ACL.** Trae chunks
+   vecinos para armar segmentos; en teoría son del mismo documento ya
+   autorizado, pero un control de acceso no debe descansar en un invariante
+   implícito. Se propagó `request` por la cadena
+   `_attach_relevant_segments` → `_build_evidence_segment` →
+   `_segment_neighbor_hits`.
+
+### Verificación de aislamiento
+
+Marcando temporalmente el Reglamento como restringido al grupo `rrhh` en ambos
+índices (chunks y ramas):
+
+| Consulta | Sin grupo `rrhh` | Con grupo `rrhh` |
+|---|---|---|
+| "¿su esposa tiene derecho a pensión?" | **0 chunks** | 8 chunks |
+| "¿a qué edad me puedo pensionar?" | **0 chunks** | 8 chunks |
+| "¿cuánto se descuenta del salario?" | **0 chunks** | 4 chunks |
+
+Sin el grupo, el sistema responde solo con actas y Código del Trabajo. La ACL de
+prueba se revirtió tras verificar.
+
+No-regresión: `hit@1` 0.600, `hit@3` 0.767, MRR 0.678, 27/30 — idénticos.
+
+Pendiente derivado: la ingesta ya acepta `acl_users`/`acl_groups`, pero **no hay
+forma de editarlos después**. Para operar de verdad hace falta un endpoint que
+cambie la ACL de un documento existente y reindexe sus chunks.
+
+## 19. Orden recomendado para lo que queda
 
 1. ~~Levantar el reranker~~ — hecho, +0.20 en `hit@1`.
 2. ~~Ablación de etapas post-rerank~~ — hecho, +0.034 adicional.

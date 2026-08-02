@@ -206,6 +206,10 @@ class ReindexResponse(BaseModel):
 class QueryRequest(BaseModel):
     question: str
     user_identity: str
+    # Grupos/areas del usuario. El control de acceso cruza estos valores contra
+    # acl_groups de cada chunk; sin ellos el usuario solo ve documentos sin
+    # restriccion y los que lo nombren explicitamente en acl_users.
+    user_groups: list[str] = Field(default_factory=list)
     filters: dict[str, object] = Field(default_factory=dict)
     conversation_context: list[dict[str, object]] = Field(default_factory=list)
 
