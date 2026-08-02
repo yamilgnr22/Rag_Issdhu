@@ -1,5 +1,7 @@
+import logging
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
@@ -33,12 +35,55 @@ from app.services.retrieval import RetrievalService
 
 settings = get_settings()
 
+# Sin esta configuracion, los warning de degradacion silenciosa (rerank caido,
+# embeddings en hash, indice de otro perfil) no llegan a ninguna parte.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
     ensure_runtime_schema()
+    status = _rerank_backend_status()
+    if status["configured"] and not status["reachable"]:
+        logger.error(
+            "rerank_backend_unreachable mode=%s url=%s: el sistema respondera con el "
+            "rerank heuristico (~0.20 peor en hit@1) hasta que el servicio vuelva",
+            settings.rerank_mode,
+            status.get("url"),
+        )
+    else:
+        logger.info("rerank_backend mode=%s reachable=%s", settings.rerank_mode, status["reachable"])
     yield
+
+
+def _rerank_backend_status() -> dict[str, object]:
+    """Comprueba de verdad el backend de rerank en lugar de asumir que responde."""
+    mode = settings.rerank_mode
+    if mode == "off":
+        return {"configured": False, "reachable": False, "reason": "rerank_mode_off"}
+    if mode == "cohere":
+        configured = bool(settings.rerank_cohere_api_key and settings.rerank_cohere_model)
+        return {"configured": configured, "reachable": configured, "url": settings.rerank_cohere_base_url}
+
+    base_url = (settings.rerank_local_base_url or "").rstrip("/")
+    if not base_url or not settings.rerank_local_model:
+        return {"configured": False, "reachable": False, "reason": "local_unconfigured"}
+    try:
+        with httpx.Client(timeout=3.0) as client:
+            response = client.get(f"{base_url}/health")
+        return {
+            "configured": True,
+            "reachable": response.status_code == 200,
+            "url": base_url,
+            "detail": response.json() if response.status_code == 200 else None,
+        }
+    except Exception as exc:
+        return {"configured": True, "reachable": False, "url": base_url, "reason": type(exc).__name__}
 
 
 app = FastAPI(
@@ -87,6 +132,9 @@ def healthcheck() -> dict[str, object]:
             "qdrant_collection": settings.resolved_qdrant_collection_name,
             "embedding_profile": settings.embedding_profile_slug,
             "rerank_mode": settings.rerank_mode,
+            # Estado real, no la configuracion declarada: el modo puede decir
+            # "local" mientras el servicio esta caido y cada consulta degrada.
+            "rerank_backend": _rerank_backend_status(),
         },
     }
 

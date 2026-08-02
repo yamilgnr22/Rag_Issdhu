@@ -1,6 +1,10 @@
+import logging
 from dataclasses import dataclass
 
 import httpx
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -71,6 +75,11 @@ class RerankGateway:
         model = self.settings.rerank_local_model
         timeout = float(self.settings.rerank_local_timeout or 20.0)
         if not base_url or not model:
+            logger.warning(
+                "rerank_degraded provider=local reason=unconfigured base_url=%r model=%r",
+                base_url,
+                model,
+            )
             return RerankOutcome(
                 ordered_keys=[document.key for document in documents],
                 scores={},
@@ -100,6 +109,16 @@ class RerankGateway:
                 documents=documents,
             )
         except Exception as exc:
+            # Degradacion silenciosa historica: el servicio local se cae y el
+            # sistema sigue respondiendo con el rerank heuristico, ~0.20 peor en
+            # hit@1, sin que nada lo registre.
+            logger.warning(
+                "rerank_degraded provider=local url=%s model=%s error=%s:%s",
+                base_url,
+                model,
+                type(exc).__name__,
+                exc,
+            )
             return RerankOutcome(
                 ordered_keys=[document.key for document in documents],
                 scores={},
@@ -148,6 +167,12 @@ class RerankGateway:
                 documents=documents,
             )
         except Exception as exc:
+            logger.warning(
+                "rerank_degraded provider=cohere model=%s error=%s:%s",
+                model,
+                type(exc).__name__,
+                exc,
+            )
             return RerankOutcome(
                 ordered_keys=[document.key for document in documents],
                 scores={},

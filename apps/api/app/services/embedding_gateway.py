@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import math
 import re
 from dataclasses import dataclass
@@ -6,6 +7,8 @@ from typing import Literal
 
 import httpx
 
+
+logger = logging.getLogger(__name__)
 
 TOKEN_PATTERN = re.compile(r"\w+", re.UNICODE)
 
@@ -60,16 +63,34 @@ class EmbeddingGateway:
         if local_config is not None:
             try:
                 return self._embed_remote(texts, local_config), "local_openai"
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning(
+                    "embedding_provider_failed source=local_openai model=%s error=%s:%s",
+                    local_config.model,
+                    type(exc).__name__,
+                    exc,
+                )
 
         cloud_config = self._cloud_config()
         if cloud_config is not None:
             try:
                 return self._embed_remote(texts, cloud_config), "cloud_openai"
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning(
+                    "embedding_provider_failed source=cloud_openai model=%s error=%s:%s",
+                    cloud_config.model,
+                    type(exc).__name__,
+                    exc,
+                )
 
+        # Fallback a vectores hash: no son comparables con los del indice, asi
+        # que la recuperacion queda inservible. Debe verse en los logs.
+        logger.error(
+            "embedding_degraded_to_hash texts=%d dim=%s "
+            "(los vectores hash no son comparables con el indice existente)",
+            len(texts),
+            self.settings.embedding_vector_size,
+        )
         return self._embed_hash(texts), "hash"
 
     def _embed_remote(self, texts: list[str], config: RemoteEmbeddingConfig) -> list[list[float]]:

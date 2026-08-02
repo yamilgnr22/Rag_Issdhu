@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import logging
 import math
 import re
 import unicodedata
 from dataclasses import dataclass
 
 import httpx
+
+
+logger = logging.getLogger(__name__)
 
 from app.models.contracts import CitationContract, QueryRequest, QueryResponse
 from app.services.answer_synthesis import AnswerSynthesisEvidence, AnswerSynthesisService
@@ -664,6 +668,12 @@ class RetrievalService:
             payload = self._qdrant_search(body=body)
             return self._parse_qdrant_hits(payload, modality="dense"), None
         except Exception as exc:
+            logger.warning(
+                "dense_search_failed collection=%s error=%s:%s",
+                self.settings.resolved_qdrant_collection_name,
+                type(exc).__name__,
+                exc,
+            )
             return [], self._truncate_reason(str(exc))
 
     def _sparse_search(
@@ -716,6 +726,12 @@ class RetrievalService:
             payload = self._opensearch_search(query_body)
             return self._parse_opensearch_hits(payload), None
         except Exception as exc:
+            logger.warning(
+                "sparse_search_failed index=%s error=%s:%s",
+                self.settings.resolved_opensearch_index_name,
+                type(exc).__name__,
+                exc,
+            )
             return [], self._truncate_reason(str(exc))
 
     def _branch_search(
@@ -1257,8 +1273,9 @@ class RetrievalService:
         index_candidates: list[str] | None = None,
     ) -> dict[str, object]:
         payload = None
+        candidates = index_candidates or self._opensearch_index_candidates()
         with httpx.Client(timeout=45.0) as client:
-            for index_name in index_candidates or self._opensearch_index_candidates():
+            for index_name in candidates:
                 response = client.post(
                     f"{self.settings.opensearch_url.rstrip('/')}/{index_name}/_search",
                     json=query_body,
@@ -1267,6 +1284,15 @@ class RetrievalService:
                     continue
                 response.raise_for_status()
                 payload = response.json()
+                if index_name != candidates[0]:
+                    # El indice del perfil activo no existe y se cayo al indice
+                    # sin perfil, que puede estar construido con otro modelo de
+                    # embedding: los resultados no serian comparables.
+                    logger.error(
+                        "index_profile_fallback expected=%s used=%s",
+                        candidates[0],
+                        index_name,
+                    )
                 break
         if payload is None:
             raise RuntimeError("OpenSearch index not found for retrieval search.")
@@ -1279,8 +1305,9 @@ class RetrievalService:
         collections: list[str] | None = None,
     ) -> dict[str, object]:
         payload = None
+        candidates = collections or self._qdrant_collection_candidates()
         with httpx.Client(timeout=45.0) as client:
-            for collection_name in collections or self._qdrant_collection_candidates():
+            for collection_name in candidates:
                 response = client.post(
                     f"{self.settings.qdrant_url.rstrip('/')}/collections/{collection_name}/points/search",
                     json=body,
@@ -1289,6 +1316,12 @@ class RetrievalService:
                     continue
                 response.raise_for_status()
                 payload = response.json()
+                if collection_name != candidates[0]:
+                    logger.error(
+                        "collection_profile_fallback expected=%s used=%s",
+                        candidates[0],
+                        collection_name,
+                    )
                 break
         if payload is None:
             raise RuntimeError("Qdrant collection not found for retrieval search.")
