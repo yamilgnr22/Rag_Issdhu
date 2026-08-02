@@ -2716,7 +2716,9 @@ class RetrievalService:
                     evidence_role=str(payload.get("evidence_role") or "").strip(),
                     selection_role=selection_roles.get(hit.chunk_id, ""),
                     path_text=str(payload.get("path_text") or "").strip(),
-                    text=self._question_focused_evidence_text(question, hit, limit=650),
+                    text=self._question_focused_evidence_text(
+                        question, hit, limit=int(self.settings.answer_evidence_char_limit)
+                    ),
                     relevance=hit.provider_rerank_score,
                 )
             )
@@ -2879,7 +2881,9 @@ class RetrievalService:
                     evidence_role=str(payload.get("evidence_role") or ""),
                     selection_role=(selection_roles or {}).get(hit.chunk_id, ""),
                     path_text=str(payload.get("path_text") or ""),
-                    text=self._question_focused_evidence_text(question, hit, limit=650),
+                    text=self._question_focused_evidence_text(
+                        question, hit, limit=int(self.settings.answer_evidence_char_limit)
+                    ),
                     relevance=hit.provider_rerank_score,
                 )
             )
@@ -4080,6 +4084,13 @@ class RetrievalService:
         raw_text = " ".join((str(payload.get("segment_text") or hit.raw_text or "")).split())
         if not raw_text:
             return ""
+
+        # Si el pasaje entra completo, se envia entero. Seleccionar un fragmento
+        # cuando no hace falta era la causa de respuestas del tipo "el articulo
+        # dice que debe contener X, pero el fragmento no enumera cuales": el
+        # encabezado ganaba por solapamiento lexico y la lista se descartaba.
+        if len(raw_text) <= limit:
+            return raw_text
 
         fragments = self._candidate_evidence_fragments(raw_text)
         if not fragments:

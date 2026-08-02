@@ -1,8 +1,12 @@
 import json
+import logging
 import re
 from dataclasses import dataclass
 
 import httpx
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -184,7 +188,17 @@ class AnswerSynthesisService:
                 )
                 response.raise_for_status()
                 payload = response.json()
-        except Exception:
+        except Exception as exc:
+            # Sin este log, un timeout o un error del proveedor devolvia la
+            # respuesta extractiva de fallback sin dejar rastro.
+            logger.warning(
+                "answer_synthesis_failed provider=%s model=%s timeout=%s error=%s:%s",
+                provider.provider_name,
+                provider.model,
+                provider.timeout,
+                type(exc).__name__,
+                exc,
+            )
             return None
 
         try:

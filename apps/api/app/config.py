@@ -98,6 +98,11 @@ class Settings(BaseSettings):
     # hasta 0.95, asi que no existe umbral que separe ambos grupos. Con 0.5 se
     # perdian 2 respuestas correctas de 30. Ver docs/fase0_baseline_honesto.md.
     answer_min_confidence: float = Field(default=0.0)
+    # Caracteres de cada pasaje que se envian al LLM. Con el valor anterior (650)
+    # solo el 52% de los chunks cabia entero y el resto se reducia a un unico
+    # fragmento: articulos que enumeran requisitos llegaban cortados justo antes
+    # de la lista. Con 1500 cabe el 77,5% y el prompt queda en ~3000 tokens.
+    answer_evidence_char_limit: int = Field(default=1500)
     answer_synthesis_cloud_base_url: str | None = Field(default=None)
     answer_synthesis_cloud_api_key: str | None = Field(default=None)
     answer_synthesis_cloud_model: str | None = Field(default=None)

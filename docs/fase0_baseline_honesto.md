@@ -419,7 +419,62 @@ Hallazgo lateral: `h014` sigue respondiendo mal *con el pasaje correcto en rank
 beneficiarios..."). Es un problema de chunking, no de prompt ni de recuperación:
 una pista para la siguiente iteración.
 
-## 17. Orden recomendado para lo que queda
+## 17. Séptima corrección: la evidencia llegaba mutilada al LLM
+
+Al comparar modelos de síntesis apareció que los tres (`gpt-5-mini`, `gpt-5`,
+`gpt-5.6-luna`) fallaban en **los mismos casos** y con la misma queja: *"el
+fragmento proporcionado no enumera cuáles son"*, *"el pasaje está incompleto"*.
+No era el modelo.
+
+Causa: `_question_focused_evidence_text` no truncaba, hacía algo peor. Partía el
+chunk por puntuación (`_candidate_evidence_fragments`) y enviaba al LLM **un solo
+fragmento**, el de mayor solapamiento léxico con la pregunta. Para el Arto. 20
+("El contrato escrito debe contener: a)… b)… c)…") el fragmento ganador era el
+encabezado *"debe contener:"* y la lista entera se descartaba. Con el límite de
+650 caracteres, solo el **51,9 %** de los chunks cabía completo.
+
+Corrección: si el pasaje entra en el presupuesto se envía **entero**, sin elegir
+fragmento; la selección solo actúa cuando el chunk excede el límite. Y el límite
+pasa a ser configurable (`answer_evidence_char_limit`, default **1500**), con lo
+que cabe el 77,5 % de los chunks y el prompt queda en ~3000 tokens.
+
+| Configuración | Hedging con evidencia correcta | Citas |
+|---|---|---|
+| mini + límite 650 (inicial) | 8/25 | 8/26 |
+| luna + límite 650 | 9/25 | 14/26 |
+| **luna + límite 1500** | **2/25** | 12/26 |
+
+Reducción del hedging del **78 %**, con el retrieval intacto (27/30). Ejemplos
+reales de la misma pregunta, antes y después:
+
+- *"¿Qué datos debe incluir un contrato escrito?"* — antes: *"el fragmento no
+  enumera cuáles son"*; ahora: *"lugar y fecha de celebración; identificación y
+  domicilio de las partes…"*.
+- *"Si fallece un afiliado, ¿su esposa tiene derecho a pensión?"* — antes: *"la
+  evidencia no permite confirmar"*; ahora: *"Sí. La esposa, en calidad de
+  cónyuge, tiene derecho a pensión de viudez"*.
+- *"¿Cuánto descanso por embarazo y parto?"* — antes: *"no indica cuánto dura"*;
+  ahora: *"cuatro semanas antes del parto y ocho después; diez en parto
+  múltiple"*.
+
+### Sobre la elección de modelo
+
+Comparados sobre 26 casos (excluyendo 4 que la corrida de `mini` abstuvo por el
+corte de confianza, ya desactivado): `gpt-5` citaba mejor (20/26 frente a 8/26 de
+mini), pero **la diferencia decisiva no estaba en el modelo sino en el límite**.
+Se fija `gpt-5.6-luna` por criterio de costo, con `ANSWER_SYNTHESIS_CLOUD_MODEL`
+explícito en `.env` — antes el modelo llegaba heredado del planner por la cadena
+de fallbacks, sin que nadie lo eligiera.
+
+También se sube `ANSWER_SYNTHESIS_CLOUD_TIMEOUT` a 90 s: con 20 s un modelo
+lento caía al fallback extractivo, y ese fallback tampoco se registraba (ahora
+emite `answer_synthesis_failed`).
+
+Advertencia sobre los precios: las cifras por token provienen de fuentes
+secundarias; openai.com devolvió 403 y no se pudo contrastar. Conviene
+verificarlas en el panel de facturación antes de tomarlas como definitivas.
+
+## 18. Orden recomendado para lo que queda
 
 1. ~~Levantar el reranker~~ — hecho, +0.20 en `hit@1`.
 2. ~~Ablación de etapas post-rerank~~ — hecho, +0.034 adicional.
@@ -443,7 +498,7 @@ una pista para la siguiente iteración.
    automático se probó y se descartó por solapamiento de rangos (sección 16).
    Queda: exponer la confianza en la UI como señal informativa, **sin**
    presentarla como probabilidad de acierto.
-11. **Chunks truncados**: `h014` responde mal con el pasaje correcto en rank 1
+11. ~~Chunks truncados~~ — resuelto (seccion 17): la evidencia se enviaba mutilada al LLM.
     porque el chunk llega cortado. Revisar el corte de artículos largos en
     `normative_hierarchical` y el límite de 650 caracteres de
     `_question_focused_evidence_text`.
