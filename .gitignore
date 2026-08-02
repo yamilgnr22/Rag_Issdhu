@@ -25,3 +25,6 @@ Thumbs.db
 *.log
 *.tmp
 *.bak
+
+# Respaldos de .env: contienen credenciales
+.env.bak*
