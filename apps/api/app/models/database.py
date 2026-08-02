@@ -38,6 +38,7 @@ class VersionRecord(Base):
     review_required: Mapped[bool] = mapped_column(Boolean, default=False)
     review_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     extraction_backend: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    extraction_quality: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     text_length: Mapped[int] = mapped_column(Integer, default=0)
     document_class: Mapped[str | None] = mapped_column(String(32), nullable=True)
     document_family: Mapped[str | None] = mapped_column(String(32), nullable=True)

@@ -381,6 +381,7 @@ class IngestionService:
             review_required=extraction.review_required,
             review_reason=extraction.review_reason,
             extraction_backend=extraction.backend,
+            extraction_quality=extraction.quality,
             text_length=extraction.text_length,
             document_class=classification.document_class,
             document_family=classification.document_family,

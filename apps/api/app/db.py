@@ -29,6 +29,7 @@ def ensure_runtime_schema() -> None:
             "classification_source": "VARCHAR(32)",
             "classification_confidence": "FLOAT",
             "classification_reason": "TEXT",
+            "extraction_quality": "JSON",
         },
         "chunks": {
             "indexed_profile": "VARCHAR(128)",

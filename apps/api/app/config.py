@@ -22,6 +22,15 @@ class Settings(BaseSettings):
     local_storage_path: str = Field(default=".data/object_store")
     ocr_enabled: bool = Field(default=False)
     ocr_language: str = Field(default="spa+eng")
+    # Control de calidad de la extraccion. El unico criterio previo era "menos de
+    # 50 caracteres", asi que 106.000 caracteres de OCR degradado entraron al
+    # indice marcados como extraidos. Umbrales calibrados sobre este corpus: los
+    # documentos nativos tienen 0,02-0,05% de tokens pegados y 9-14% de palabras
+    # acentuadas; el Reglamento escaneado tenia 18,5% y 0,14%.
+    extraction_quality_gate_enabled: bool = Field(default=True)
+    extraction_max_glued_ratio: float = Field(default=0.02)
+    extraction_min_accent_ratio: float = Field(default=0.05)
+    extraction_quality_min_words: int = Field(default=200)
 
     postgres_host: str = Field(default="localhost")
     postgres_port: int = Field(default=5432)

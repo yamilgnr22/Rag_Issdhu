@@ -1,4 +1,5 @@
 import io
+import logging
 import mimetypes
 import re
 from dataclasses import dataclass
@@ -10,6 +11,9 @@ from bs4 import BeautifulSoup
 from docx import Document as DocxDocument
 
 from app.config import Settings
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -26,10 +30,36 @@ class ExtractionResult:
     backend: str
     review_required: bool
     review_reason: str | None = None
+    quality: dict[str, float] | None = None
 
     @property
     def text_length(self) -> int:
         return sum(len(block.text) for block in self.blocks)
+
+
+WORD_PATTERN = re.compile(r"[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]{2,}")
+ACCENTED = set("áéíóúüñÁÉÍÓÚÜÑ")
+
+
+def assess_text_quality(text: str) -> dict[str, float]:
+    """Mide dos sintomas de OCR degradado que se detectan sin conocer el documento.
+
+    - glued_ratio: proporcion de "palabras" de 18 o mas letras. Cuando el OCR
+      pierde los espacios aparecen tokens como "Delassiglasyconceptos".
+    - accent_ratio: proporcion de palabras con tilde o enie. Un OCR que corrio
+      sin el idioma correcto se come los diacriticos.
+    """
+    words = WORD_PATTERN.findall(text or "")
+    total = len(words)
+    if not total:
+        return {"words": 0.0, "glued_ratio": 0.0, "accent_ratio": 0.0}
+    glued = sum(1 for word in words if len(word) >= 18)
+    accented = sum(1 for word in words if any(char in ACCENTED for char in word))
+    return {
+        "words": float(total),
+        "glued_ratio": round(glued / total, 4),
+        "accent_ratio": round(accented / total, 4),
+    }
 
 
 class DoclingExtractor:
@@ -240,12 +270,46 @@ class FallbackExtractor:
 
 class ExtractionPipeline:
     def __init__(self, settings: Settings) -> None:
+        self.settings = settings
         self.docling = DoclingExtractor(settings)
         self.fallback = FallbackExtractor(settings)
 
     def extract(self, filename: str, content: bytes) -> ExtractionResult:
         docling_result = self.docling.extract(filename, content)
         if docling_result and docling_result.blocks:
-            return docling_result
-        return self.fallback.extract(filename, content)
+            return self._apply_quality_gate(docling_result)
+        return self._apply_quality_gate(self.fallback.extract(filename, content))
+
+    def _apply_quality_gate(self, result: ExtractionResult) -> ExtractionResult:
+        """Marca para revision manual una extraccion legible por el parser pero
+        inservible para recuperacion."""
+        if not getattr(self.settings, "extraction_quality_gate_enabled", True):
+            return result
+
+        text = " ".join(block.text for block in result.blocks)
+        quality = assess_text_quality(text)
+        result.quality = quality
+
+        # En textos cortos las proporciones son ruido; el gate no opina.
+        if quality["words"] < float(self.settings.extraction_quality_min_words):
+            return result
+
+        reasons: list[str] = []
+        if quality["glued_ratio"] > float(self.settings.extraction_max_glued_ratio):
+            reasons.append(f"glued_tokens={quality['glued_ratio']:.3f}")
+        if quality["accent_ratio"] < float(self.settings.extraction_min_accent_ratio):
+            reasons.append(f"missing_accents={quality['accent_ratio']:.3f}")
+
+        if reasons:
+            logger.warning(
+                "extraction_quality_gate backend=%s words=%d %s",
+                result.backend,
+                int(quality["words"]),
+                " ".join(reasons),
+            )
+            result.review_required = True
+            existing = result.review_reason
+            gate_reason = "low_extraction_quality:" + ",".join(reasons)
+            result.review_reason = f"{existing};{gate_reason}" if existing else gate_reason
+        return result
 
