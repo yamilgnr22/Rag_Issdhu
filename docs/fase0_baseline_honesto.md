@@ -531,7 +531,56 @@ Pendiente derivado: la ingesta ya acepta `acl_users`/`acl_groups`, pero **no hay
 forma de editarlos después**. Para operar de verdad hace falta un endpoint que
 cambie la ACL de un documento existente y reindexe sus chunks.
 
-## 19. Orden recomendado para lo que queda
+## 19. Fixture ampliado a 150 preguntas: el de 30 subestimaba el sistema
+
+El fixture de 30 se quedó sin resolución (27/30 resueltos, cada caso valía 3,3
+puntos) y dejaba fuera NIIF y GAFI, 649 chunks del corpus. Se amplió a 150
+conservando las 30 originales y sus ids.
+
+Cobertura: `codigo_del_trabajo` 32, `ley_822` 32, `reglamento_issdhu` 28,
+`gafi` 22, `niif_pymes` 21, `actas_consejo` 15. Los 150 targets se verificaron
+como alcanzables contra el índice antes de medir.
+
+Las métricas globales del runner mezclan dos poblaciones y no deben leerse
+juntas: GAFI y actas se evalúan por **bloque** (sus `unit_hit` son 0 por
+diseño). Separadas:
+
+| | Casos | hit@1 | hit@3 | hit@5 | MRR |
+|---|---|---|---|---|---|
+| Medidos por unidad | 113 | **74.3 %** | **91.2 %** | 94.7 % | 0.826 |
+| Medidos por bloque | 37 | 81.1 % | 94.6 % | 97.3 % | — |
+
+**Global: 138/150 resueltos (92 %).** Latencia 24,4 s/consulta.
+
+Por corpus: `niif_pymes` 21/21, `actas_consejo` 15/15, `reglamento_issdhu`
+27/28, `codigo_del_trabajo` 30/32, `gafi` 20/22, `ley_822` 25/32.
+
+### El fixture chico subestimaba
+
+Con 30 preguntas el `hit@1` medía 0.60; con 113 casos de unidad mide **0.743**.
+La diferencia no es que el sistema mejorara —no cambió nada entre ambas
+medidas— sino que el fixture de 30 estaba sesgado hacia casos difíciles: se
+construyó eligiendo deliberadamente sinónimos y brechas de vocabulario para
+sondear límites, y esa selección no representa la distribución real de
+consultas. Es un recordatorio de que un fixture pequeño no solo tiene ruido:
+puede tener sesgo sistemático.
+
+También confirma el valor de la reingesta OCR: `reglamento_issdhu`, el peor
+corpus al empezar, ahora resuelve 27 de 28.
+
+### Dónde se concentran los fallos
+
+7 de los 12 fallos son de `ley_822`, y el patrón es consistente: preguntas
+conceptuales cuya respuesta está en los artículos iniciales de definiciones
+(Art. 2 principios, 5 territorio, 6 valoración, 10 fuente nicaragüense) que
+pierden contra artículos operativos de numeración alta. `h065` ("¿qué
+principios rigen los tributos?") recupera los artículos 146, 319 y 16.
+
+Los otros cinco ya eran conocidos o son de vocabulario: `h008` y `h017`
+(brechas semánticas donde solo el denso acierta), `h037`, `h127` y `h128`
+(GAFI, donde la pregunta usa lenguaje llano y el documento término técnico).
+
+## 20. Orden recomendado para lo que queda
 
 1. ~~Levantar el reranker~~ — hecho, +0.20 en `hit@1`.
 2. ~~Ablación de etapas post-rerank~~ — hecho, +0.034 adicional.
@@ -542,7 +591,7 @@ cambie la ACL de un documento existente y reindexe sus chunks.
    la vía (b): separar el fixture de entrenamiento del router del de evaluación
    —pendiente desde la sección 8— y reentrenarlo con preguntas en lenguaje
    natural.
-5. Gate de calidad de extracción en la ingesta (paso 3 del plan de ingesta, aún
+5. ~~Gate de calidad de extracción en la ingesta~~ — hecho (commit `feat: gate de calidad en la ingesta`). (paso 3 del plan de ingesta, aún
    sin implementar): hoy `review_required` solo salta bajo 50 caracteres, así que
    el próximo escaneado malo volverá a pasar inadvertido. Umbrales validados:
    tokens pegados < 2 %, palabras acentuadas > 5 %.
