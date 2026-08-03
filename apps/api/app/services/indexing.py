@@ -53,6 +53,7 @@ class QdrantIndexClient:
     def __init__(self, settings, *, collection_name: str | None = None) -> None:
         self.base_url = settings.qdrant_url.rstrip("/")
         self.collection_name = collection_name or settings.resolved_qdrant_collection_name
+        self.batch_size = max(1, int(getattr(settings, "index_upsert_batch_size", 64) or 64))
 
     def ensure_collection(self, *, vector_size: int) -> None:
         with httpx.Client(timeout=20.0) as client:
@@ -87,13 +88,17 @@ class QdrantIndexClient:
                 )
 
     def upsert_points(self, *, points: list[dict[str, object]]) -> None:
-        with httpx.Client(timeout=60.0) as client:
-            response = client.put(
-                f"{self.base_url}/collections/{self.collection_name}/points",
-                params={"wait": "true"},
-                json={"points": points},
-            )
-            response.raise_for_status()
+        """Escribe por lotes: un unico PUT con todos los puntos supera el limite
+        de body de Qdrant en documentos grandes y falla la indexacion entera."""
+        with httpx.Client(timeout=120.0) as client:
+            for start in range(0, len(points), self.batch_size):
+                batch = points[start : start + self.batch_size]
+                response = client.put(
+                    f"{self.base_url}/collections/{self.collection_name}/points",
+                    params={"wait": "true"},
+                    json={"points": batch},
+                )
+                response.raise_for_status()
 
     def delete_by_version_id(self, *, version_id: str) -> None:
         with httpx.Client(timeout=60.0) as client:
@@ -127,6 +132,7 @@ class OpenSearchIndexClient:
         self.index_name = index_name or settings.resolved_opensearch_index_name
         self.id_field = id_field
         self.properties = properties or {}
+        self.batch_size = max(1, int(getattr(settings, "index_upsert_batch_size", 64) or 64))
 
     def ensure_index(self) -> None:
         with httpx.Client(timeout=20.0) as client:
@@ -156,26 +162,28 @@ class OpenSearchIndexClient:
                 create.raise_for_status()
 
     def bulk_upsert(self, *, documents: list[dict[str, object]], refresh: bool) -> None:
-        lines: list[str] = []
-        for document in documents:
-            lines.append(
-                json.dumps({"index": {"_index": self.index_name, "_id": document[self.id_field]}})
-            )
-            lines.append(json.dumps(document, ensure_ascii=True))
-        body = "\n".join(lines) + "\n"
-
         headers = {"Content-Type": "application/x-ndjson"}
-        with httpx.Client(timeout=60.0) as client:
-            response = client.post(
-                f"{self.base_url}/_bulk",
-                params={"refresh": str(refresh).lower()},
-                headers=headers,
-                content=body.encode("utf-8"),
-            )
-            response.raise_for_status()
-            payload = response.json()
-            if payload.get("errors") is True:
-                raise RuntimeError("OpenSearch bulk indexing returned item errors.")
+        with httpx.Client(timeout=120.0) as client:
+            for start in range(0, len(documents), self.batch_size):
+                batch = documents[start : start + self.batch_size]
+                lines: list[str] = []
+                for document in batch:
+                    lines.append(
+                        json.dumps({"index": {"_index": self.index_name, "_id": document[self.id_field]}})
+                    )
+                    lines.append(json.dumps(document, ensure_ascii=True))
+                body = "\n".join(lines) + "\n"
+                is_last = start + self.batch_size >= len(documents)
+                response = client.post(
+                    f"{self.base_url}/_bulk",
+                    params={"refresh": str(refresh and is_last).lower()},
+                    headers=headers,
+                    content=body.encode("utf-8"),
+                )
+                response.raise_for_status()
+                payload = response.json()
+                if payload.get("errors") is True:
+                    raise RuntimeError("OpenSearch bulk indexing returned item errors.")
 
     def delete_by_version_id(self, *, version_id: str, refresh: bool = True) -> None:
         with httpx.Client(timeout=60.0) as client:

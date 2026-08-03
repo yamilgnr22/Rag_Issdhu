@@ -149,6 +149,11 @@ class Settings(BaseSettings):
         default="hybrid"
     )
     embedding_batch_size: int = Field(default=32)
+    # Puntos por peticion al escribir en el indice. Sin lotes, un documento
+    # grande genera un body que supera el limite de Qdrant (32 MB): 654 chunks
+    # de 3072 dimensiones son ~25 MB solo de vectores, y la indexacion fallaba
+    # entera con 400 despues de haber calculado todos los resumenes.
+    index_upsert_batch_size: int = Field(default=64)
     embedding_vector_size: int = Field(default=256)
     embedding_profiled_index_names: bool = Field(default=True)
     embedding_profile_name: str | None = Field(default=None)
