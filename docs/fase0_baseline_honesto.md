@@ -663,33 +663,58 @@ honesta sobre un corpus mayor, no un retroceso.
 - Los otros seis ya eran conocidos: brechas de vocabulario donde solo el
   recuperador denso acierta.
 
-## 22. Orden recomendado para lo que queda
+## 22. Estado del plan
 
-1. ~~Levantar el reranker~~ — hecho, +0.20 en `hit@1`.
-2. ~~Ablación de etapas post-rerank~~ — hecho, +0.034 adicional.
-3. ~~Reingerir el Reglamento con OCR en español~~ — hecho; corrigió el texto pero
-   no movió las métricas (ver sección 12).
-4. ~~Arreglar el router~~ — hecho por la vía (a): filtro de clase como
-   preferencia bajo 0.95 de confianza. +0.067 `hit@1`, +3 casos. Queda pendiente
-   la vía (b): separar el fixture de entrenamiento del router del de evaluación
-   —pendiente desde la sección 8— y reentrenarlo con preguntas en lenguaje
-   natural.
-5. ~~Gate de calidad de extracción en la ingesta~~ — hecho (commit `feat: gate de calidad en la ingesta`). (paso 3 del plan de ingesta, aún
-   sin implementar): hoy `review_required` solo salta bajo 50 caracteres, así que
-   el próximo escaneado malo volverá a pasar inadvertido. Umbrales validados:
-   tokens pegados < 2 %, palabras acentuadas > 5 %.
-6. Analizador español + asciifolding en OpenSearch.
-7. Revisar los targets discutibles del fixture (`h017`, y los de `ley_822` y
-   actas marcados en su día como `proposed_auto`).
-8. ~~Desacoplar la prioridad de la evidencia en el prompt de su posición~~ —
-   hecho, sin efecto medible (sección 16).
-9. ~~Calibrar o retirar el `confidence`~~ — hecho (sección 15). El corte
-   automático se probó y se descartó por solapamiento de rangos (sección 16).
-   Queda: exponer la confianza en la UI como señal informativa, **sin**
-   presentarla como probabilidad de acierto.
-11. ~~Chunks truncados~~ — resuelto (seccion 17): la evidencia se enviaba mutilada al LLM.
-    porque el chunk llega cortado. Revisar el corte de artículos largos en
-    `normative_hierarchical` y el límite de 650 caracteres de
-    `_question_focused_evidence_text`.
-10. Dejar el reranker como servicio persistente: hoy depende de un proceso
-    arrancado a mano, y si muere el sistema degrada en silencio al heurístico.
+Punto de partida: `hit@1` 0.333 sobre 30 preguntas, corpus de 1.810 chunks.
+Estado actual: `hit@1` **0.766** sobre 124 casos de unidad, corpus de 2.469
+chunks, 147/161 preguntas resueltas.
+
+### Hecho
+
+| # | Intervención | Efecto medido |
+|---|---|---|
+| 1 | Levantar el reranker (estaba configurado pero muerto) | **+0.200** `hit@1` |
+| 2 | Ablación de etapas post-rerank; se retira la política de visibilidad | +0.034 |
+| 3 | Filtro de clase del router como preferencia bajo 0.95 de confianza | +0.067, +3 casos |
+| 4 | Evidencia completa al LLM (límite 650 → 1500, sin fragmentar) | hedging −78 % |
+| 5 | OCR en español para PDFs escaneados | Reglamento: 7/10 → 27/28 |
+| 6 | Extracción por lotes de PDFs largos | corpus 1.810 → **2.469 chunks** |
+| 7 | ACL aplicadas en las búsquedas (C1 crítico) | aislamiento verificado |
+| 8 | Logging de degradación silenciosa (C4 crítico) | 6 puntos ciegos cubiertos |
+| 9 | Gate de calidad e integridad en la ingesta | detecta OCR malo y páginas perdidas |
+| 10 | Escritura al índice por lotes | corrige HTTP 400 en documentos grandes |
+| 11 | Reingesta que verifica antes de retirar | evita dejar el corpus sin un documento |
+| 12 | Confianza basada en el cross-encoder | 0.904 al acertar vs 0.546 sin respuesta |
+| 13 | Modelo de síntesis elegido explícitamente (`gpt-5.6-luna`) | antes lo heredaba del planner |
+| 14 | Fixture honesto: 30 → 161 preguntas, todo el corpus | resolución 3,3 → 0,6 pts/caso |
+
+Probado y descartado con evidencia: el corte automático por umbral de confianza
+(descartaba respuestas correctas) y exponer la relevancia en el prompt (sin
+efecto medible).
+
+### Pendiente, por relación impacto/esfuerzo
+
+1. **Cachear los resúmenes por chunk** (hallazgo M2). Cada reindexado cuesta ~55
+   minutos casi enteros en regenerar resúmenes que no cambiaron, y un fallo al
+   final lo tira todo. Hoy costó dos horas de recálculo. Cachear por hash del
+   texto lo convierte en segundos.
+2. **Reranker como servicio persistente.** Depende de un proceso a mano; cayó
+   tres veces en una sesión y cada caída vale −0.20 de `hit@1` en silencio.
+3. **Ley 822**: concentra 6 de los 14 fallos. Preguntas conceptuales cuya
+   respuesta está en los artículos de definiciones, que pierden contra artículos
+   operativos de numeración alta. Único corpus bajo el 80 %.
+4. **Endpoint de administración de ACL.** El control de acceso funciona pero no
+   se puede administrar: cambiar los permisos de un documento exige reindexarlo
+   o tocar los índices a mano.
+5. **Modo estricto de embeddings** (C3): hoy la caída a vectores hash se
+   registra pero no se bloquea.
+6. Separar el fixture de entrenamiento del router del de evaluación y
+   reentrenarlo con preguntas en lenguaje natural.
+7. NIIF secciones 28 y 29: completas en el índice pero aún no recuperables.
+8. Analizador español con `asciifolding` en OpenSearch.
+9. Deduplicación por checksum en la ingesta.
+10. Ablación de `BOOSTABLE_PHRASES` y poda de los clasificadores sklearn
+    entrenados con pocos ejemplos.
+11. Revisar los targets marcados `proposed_auto` en el fixture.
+12. Exponer la confianza en la UI como señal informativa, nunca como
+    probabilidad de acierto.
