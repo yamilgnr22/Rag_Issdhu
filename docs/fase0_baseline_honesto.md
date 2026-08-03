@@ -624,7 +624,46 @@ hallazgo M2 de la auditoría inicial; aquí se ve su costo real. Cachearlos por
 hash del texto del chunk convertiría un reintento de 55 minutos en uno de
 segundos.
 
-## 21. Orden recomendado para lo que queda
+## 21. Baseline sobre el corpus completo (161 preguntas)
+
+Primera medición con todo el contenido indexado. El corpus pasó de 1.810 a
+**2.469 chunks**: un 36 % no era consultable y ninguna métrica lo mostraba,
+porque el fixture no preguntaba por lo que faltaba.
+
+| Métrica | 150 preg. (corpus incompleto) | 161 preg. (completo) |
+|---|---|---|
+| hit@1 por unidad | 74,3 % | **76,6 %** |
+| hit@3 por unidad | 91,2 % | 90,3 % |
+| MRR | 0,826 | **0,836** |
+| block@3 | 94,6 % | 94,6 % |
+| Global | 138/150 (92,0 %) | **147/161 (91,3 %)** |
+
+Por corpus: `actas_consejo` 15/15, `reglamento_issdhu` 27/28, `codigo_del_trabajo`
+30/32, `niif_pymes` 30/32, `gafi` 20/22, `ley_822` 25/32.
+
+**9 de las 11 preguntas sobre las secciones recuperadas se responden ahora, todas
+en rank 1**: propiedades de inversión, depreciación, arrendamientos, provisiones,
+ingresos, deterioro, combinaciones de negocios, pasivo vs. patrimonio y pagos
+basados en acciones. Antes ninguna era planteable.
+
+NIIF pasó de 21 a 32 preguntas y aun así mejoró a 30/32 con `hit@1` de 0,875 — el
+mejor del corpus junto al Reglamento. El global baja tres décimas solo porque el
+fixture incorpora 11 preguntas que antes eran imposibles: es una medición más
+honesta sobre un corpus mayor, no un retroceso.
+
+### Los 14 fallos restantes
+
+- **Ley 822 concentra 6** (arts. 2, 6, 10, 33, 41, 45). Patrón consistente:
+  preguntas conceptuales cuya respuesta está en los artículos de definiciones
+  iniciales, que pierden contra artículos operativos de numeración alta. Es el
+  único corpus por debajo del 80 %.
+- **Dos de NIIF resisten** pese a estar ahora completas: Sección 28 (Beneficios a
+  los Empleados, 39 chunks) y Sección 29 (Impuesto a las Ganancias, 25 chunks).
+  Secciones grandes cuyo contenido compite consigo mismo.
+- Los otros seis ya eran conocidos: brechas de vocabulario donde solo el
+  recuperador denso acierta.
+
+## 22. Orden recomendado para lo que queda
 
 1. ~~Levantar el reranker~~ — hecho, +0.20 en `hit@1`.
 2. ~~Ablación de etapas post-rerank~~ — hecho, +0.034 adicional.
