@@ -1,7 +1,11 @@
 import io
 import logging
 import mimetypes
+import os
 import re
+import sys
+import tempfile
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -31,6 +35,7 @@ class ExtractionResult:
     review_required: bool
     review_reason: str | None = None
     quality: dict[str, float] | None = None
+    failed_pages: list[int] | None = None
 
     @property
     def text_length(self) -> int:
@@ -39,6 +44,56 @@ class ExtractionResult:
 
 WORD_PATTERN = re.compile(r"[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]{2,}")
 ACCENTED = set("áéíóúüñÁÉÍÓÚÜÑ")
+# docling-parse reporta las paginas que no pudo procesar por stderr nativo y
+# devuelve el resto del documento como si la conversion hubiera sido completa:
+#   "Stage preprocess failed for run 1, pages [223]: std::bad_alloc"
+FAILED_PAGES_PATTERN = re.compile(r"failed[^\n]*?pages?\s*\[([\d,\s]+)\]", re.IGNORECASE)
+
+
+@contextmanager
+def capture_native_stderr():
+    """Captura stderr a nivel de descriptor.
+
+    contextlib.redirect_stderr solo desvia sys.stderr, y estos mensajes los
+    escribe una libreria nativa directamente al fd 2.
+    """
+    try:
+        target_fd = sys.stderr.fileno()
+    except Exception:
+        yield None  # sin fd real (p.ej. stderr capturado): no se puede interceptar
+        return
+
+    saved_fd = os.dup(target_fd)
+    tmp = tempfile.TemporaryFile(mode="w+b")
+    try:
+        sys.stderr.flush()
+        os.dup2(tmp.fileno(), target_fd)
+        yield tmp
+    finally:
+        try:
+            sys.stderr.flush()
+        except Exception:
+            pass
+        os.dup2(saved_fd, target_fd)
+        os.close(saved_fd)
+        try:
+            tmp.seek(0)
+            captured = tmp.read().decode("utf-8", errors="replace")
+            if captured.strip():
+                sys.stderr.write(captured)  # no tragarse la salida original
+        except Exception:
+            pass
+        tmp.close()
+
+
+def parse_failed_pages(stderr_text: str) -> list[int]:
+    pages: set[int] = set()
+    for match in FAILED_PAGES_PATTERN.finditer(stderr_text or ""):
+        for raw in match.group(1).split(","):
+            raw = raw.strip()
+            if raw.isdigit():
+                pages.add(int(raw))
+    return sorted(pages)
 
 
 def assess_text_quality(text: str) -> dict[str, float]:
@@ -122,12 +177,34 @@ class DoclingExtractor:
                 converter = self._build_converter(needs_ocr=needs_ocr) if is_pdf else DocumentConverter()
             except Exception:
                 converter = DocumentConverter()
-            result = converter.convert(str(temp_path))
+
+            with capture_native_stderr() as stderr_buffer:
+                result = converter.convert(str(temp_path))
+                captured = ""
+                if stderr_buffer is not None:
+                    stderr_buffer.flush()
+                    stderr_buffer.seek(0)
+                    captured = stderr_buffer.read().decode("utf-8", errors="replace")
+            failed_pages = parse_failed_pages(captured)
+            if failed_pages:
+                logger.error(
+                    "extraction_pages_lost file=%s pages=%d %s "
+                    "(docling descarto estas paginas y devolvio el resto como conversion completa)",
+                    filename,
+                    len(failed_pages),
+                    failed_pages[:20],
+                )
+
             document = result.document
             markdown = document.export_to_markdown().strip()
             if not markdown:
                 return None
             review_required = len(markdown) < 50
+            reason = "docling_extracted_too_little_text" if review_required else None
+            if failed_pages:
+                review_required = True
+                lost = f"pages_lost_in_extraction:{len(failed_pages)}"
+                reason = f"{reason};{lost}" if reason else lost
             backend = "docling"
             if needs_ocr:
                 backend = f"docling+ocr[{'+'.join(self._ocr_languages())}]"
@@ -135,7 +212,8 @@ class DoclingExtractor:
                 blocks=[ExtractionBlock("docling_markdown", markdown, 1, ["Document"])],
                 backend=backend,
                 review_required=review_required,
-                review_reason="docling_extracted_too_little_text" if review_required else None,
+                review_reason=reason,
+                failed_pages=failed_pages or None,
             )
         except Exception:
             return None
@@ -276,18 +354,50 @@ class ExtractionPipeline:
 
     def extract(self, filename: str, content: bytes) -> ExtractionResult:
         docling_result = self.docling.extract(filename, content)
-        if docling_result and docling_result.blocks:
-            return self._apply_quality_gate(docling_result)
-        return self._apply_quality_gate(self.fallback.extract(filename, content))
+        result = docling_result if (docling_result and docling_result.blocks) else self.fallback.extract(filename, content)
+        return self._apply_quality_gate(result, filename=filename, content=content)
 
-    def _apply_quality_gate(self, result: ExtractionResult) -> ExtractionResult:
+    def _reference_chars_per_page(self, content: bytes) -> tuple[float, int]:
+        """Caracteres por pagina segun pdfplumber, como referencia independiente
+        de lo que haya extraido docling. Devuelve (chars_por_pagina, paginas)."""
+        try:
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                pages = pdf.pages
+                total = len(pages)
+                if not total:
+                    return 0.0, 0
+                sample_index = list(range(0, total, max(1, total // 12)))
+                sampled = sum(len((pages[i].extract_text() or "")) for i in sample_index)
+                return sampled / len(sample_index), total
+        except Exception:
+            return 0.0, 0
+
+    def _apply_quality_gate(
+        self,
+        result: ExtractionResult,
+        *,
+        filename: str = "",
+        content: bytes | None = None,
+    ) -> ExtractionResult:
         """Marca para revision manual una extraccion legible por el parser pero
-        inservible para recuperacion."""
+        inservible para recuperacion, o incompleta."""
         if not getattr(self.settings, "extraction_quality_gate_enabled", True):
             return result
 
         text = " ".join(block.text for block in result.blocks)
         quality = assess_text_quality(text)
+
+        # Integridad: solo aplicable a PDFs con capa de texto, que es donde
+        # pdfplumber sirve de referencia independiente.
+        if content and Path(filename).suffix.lower() == ".pdf":
+            reference, pages = self._reference_chars_per_page(content)
+            if reference > 200 and pages:
+                extracted_per_page = len(text) / pages
+                quality["pages"] = float(pages)
+                quality["chars_per_page"] = round(extracted_per_page, 1)
+                quality["reference_chars_per_page"] = round(reference, 1)
+                quality["coverage_ratio"] = round(extracted_per_page / reference, 3)
+
         result.quality = quality
 
         # En textos cortos las proporciones son ruido; el gate no opina.
@@ -299,6 +409,11 @@ class ExtractionPipeline:
             reasons.append(f"glued_tokens={quality['glued_ratio']:.3f}")
         if quality["accent_ratio"] < float(self.settings.extraction_min_accent_ratio):
             reasons.append(f"missing_accents={quality['accent_ratio']:.3f}")
+        coverage = quality.get("coverage_ratio")
+        if coverage is not None and coverage < float(self.settings.extraction_min_coverage_ratio):
+            reasons.append(f"incomplete_extraction={coverage:.2f}")
+        if result.failed_pages:
+            reasons.append(f"pages_lost={len(result.failed_pages)}")
 
         if reasons:
             logger.warning(

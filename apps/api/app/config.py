@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     extraction_max_glued_ratio: float = Field(default=0.02)
     extraction_min_accent_ratio: float = Field(default=0.05)
     extraction_quality_min_words: int = Field(default=200)
+    # Integridad: proporcion entre lo extraido y lo que el PDF realmente
+    # contiene, medido con pdfplumber sobre una muestra de paginas. Un texto
+    # puede ser impecable y aun asi estar incompleto: NIIF para PYMES paso el
+    # control de calidad con 0,0004 de tokens pegados mientras le faltaba el 34%
+    # del documento, porque docling descarto paginas por falta de memoria.
+    extraction_min_coverage_ratio: float = Field(default=0.8)
 
     postgres_host: str = Field(default="localhost")
     postgres_port: int = Field(default=5432)
