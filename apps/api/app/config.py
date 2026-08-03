@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     # control de calidad con 0,0004 de tokens pegados mientras le faltaba el 34%
     # del documento, porque docling descarto paginas por falta de memoria.
     extraction_min_coverage_ratio: float = Field(default=0.8)
+    # Conversion por lotes de paginas. docling acumula memoria a lo largo del
+    # documento y a partir de cierto punto falla con std::bad_alloc, descartando
+    # paginas en silencio: NIIF para PYMES (276 pag) perdio 107 en una corrida y
+    # 3 en otra. Convertir por tramos acota el pico de memoria. 0 desactiva.
+    extraction_batch_pages: int = Field(default=40)
+    extraction_batch_threshold_pages: int = Field(default=60)
 
     postgres_host: str = Field(default="localhost")
     postgres_port: int = Field(default=5432)

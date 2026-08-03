@@ -139,6 +139,70 @@ class DoclingExtractor:
         except Exception:
             return True
 
+    def _pdf_page_count(self, content: bytes) -> int:
+        try:
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                return len(pdf.pages)
+        except Exception:
+            return 0
+
+    def _convert_document(self, converter, path: Path, *, total_pages: int) -> tuple[str, list[int]]:
+        """Convierte el documento, por tramos si es grande.
+
+        Devuelve (markdown, paginas_perdidas). Trocear acota el pico de memoria
+        de docling; sin esto, los documentos largos pierden paginas en silencio.
+        """
+        batch_size = int(getattr(self.settings, "extraction_batch_pages", 0) or 0)
+        threshold = int(getattr(self.settings, "extraction_batch_threshold_pages", 0) or 0)
+        use_batches = bool(batch_size and total_pages and threshold and total_pages > threshold)
+
+        ranges: list[tuple[int, int]]
+        if use_batches:
+            ranges = [
+                (start, min(start + batch_size - 1, total_pages))
+                for start in range(1, total_pages + 1, batch_size)
+            ]
+            logger.info(
+                "extraction_batched file=%s pages=%d batches=%d size=%d",
+                path.name,
+                total_pages,
+                len(ranges),
+                batch_size,
+            )
+        else:
+            ranges = [(1, total_pages)] if total_pages else [(1, 10**9)]
+
+        parts: list[str] = []
+        failed: list[int] = []
+        for index, (start, end) in enumerate(ranges, start=1):
+            with capture_native_stderr() as buffer:
+                if use_batches:
+                    result = converter.convert(str(path), page_range=(start, end))
+                else:
+                    result = converter.convert(str(path))
+                captured = ""
+                if buffer is not None:
+                    buffer.flush()
+                    buffer.seek(0)
+                    captured = buffer.read().decode("utf-8", errors="replace")
+            lost = parse_failed_pages(captured)
+            if lost:
+                logger.error(
+                    "extraction_pages_lost file=%s batch=%d/%d range=%s-%s pages=%s",
+                    path.name,
+                    index,
+                    len(ranges),
+                    start,
+                    end,
+                    lost[:20],
+                )
+                failed.extend(lost)
+            markdown = result.document.export_to_markdown().strip()
+            if markdown:
+                parts.append(markdown)
+
+        return "\n\n".join(parts).strip(), sorted(set(failed))
+
     def _build_converter(self, *, needs_ocr: bool):
         from docling.document_converter import DocumentConverter, PdfFormatOption
         from docling.datamodel.base_models import InputFormat
@@ -178,25 +242,19 @@ class DoclingExtractor:
             except Exception:
                 converter = DocumentConverter()
 
-            with capture_native_stderr() as stderr_buffer:
-                result = converter.convert(str(temp_path))
-                captured = ""
-                if stderr_buffer is not None:
-                    stderr_buffer.flush()
-                    stderr_buffer.seek(0)
-                    captured = stderr_buffer.read().decode("utf-8", errors="replace")
-            failed_pages = parse_failed_pages(captured)
+            markdown, failed_pages = self._convert_document(
+                converter,
+                temp_path,
+                total_pages=self._pdf_page_count(content) if is_pdf else 0,
+            )
             if failed_pages:
                 logger.error(
-                    "extraction_pages_lost file=%s pages=%d %s "
+                    "extraction_pages_lost_total file=%s pages=%d %s "
                     "(docling descarto estas paginas y devolvio el resto como conversion completa)",
                     filename,
                     len(failed_pages),
                     failed_pages[:20],
                 )
-
-            document = result.document
-            markdown = document.export_to_markdown().strip()
             if not markdown:
                 return None
             review_required = len(markdown) < 50
