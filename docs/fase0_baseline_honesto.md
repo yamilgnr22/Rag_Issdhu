@@ -580,7 +580,51 @@ Los otros cinco ya eran conocidos o son de vocabulario: `h008` y `h017`
 (brechas semánticas donde solo el denso acierta), `h037`, `h127` y `h128`
 (GAFI, donde la pregunta usa lenguaje llano y el documento término técnico).
 
-## 20. Orden recomendado para lo que queda
+## 20. Extracción por lotes: NIIF y GAFI perdían la mitad del documento
+
+`DocumentConverter.convert` acepta `page_range`, así que los PDFs de más de
+`extraction_batch_threshold_pages` (60) se convierten en tramos de
+`extraction_batch_pages` (40) y se concatena el markdown. Esto acota el pico de
+memoria de docling, que era la causa del `std::bad_alloc`.
+
+| Documento | Indexado antes | Con troceo | Páginas perdidas |
+|---|---|---|---|
+| NIIF para PYMES (276 pág.) | 413.439 | **878.379** | 107 → **0** |
+| GAFI (381 pág.) | 519.179 | **1.068.519** | — → **0** |
+| Ley 822 (65 pág.) | 550.647 | 556.471 | 0 → 0 |
+| Acta 208 (14 pág., no se trocea) | 36.278 | 36.278 | 0 → 0 |
+
+Los dos documentos más largos del corpus **tenían indexada menos de la mitad de
+su contenido**. Las 14 secciones ausentes de NIIF (16-29: Arrendamientos,
+Provisiones, Ingresos, Beneficios a los Empleados, Deterioro, Impuesto a las
+Ganancias) reaparecen con 20 a 68 referencias a sus párrafos cada una.
+
+### Dos fallos que aparecieron al reingerir
+
+**El upsert enviaba todos los puntos en una sola petición.** 654 chunks de 3072
+dimensiones son ~25 MB solo de vectores: por encima del límite de body de
+Qdrant. La indexación fallaba entera con HTTP 400 **después** de gastar 56
+minutos generando los resúmenes por chunk. Con los 362 chunks de la versión
+anterior no se llegaba al límite, así que el problema apareció justo al mejorar
+la extracción. Ahora se escribe en lotes de 64 en Qdrant y OpenSearch.
+
+**El script de reingesta retiraba la versión vieja sin comprobar la nueva.**
+Cuando la indexación falló, retiró la anterior igualmente: ni la vieja ni la
+nueva quedaron en el índice, y el corpus estuvo sin NIIF durante horas.
+`app/tools/reingest_document.py` cuenta ahora los documentos realmente escritos
+en ambos motores y aborta dejando la versión anterior intacta si no coinciden.
+Incluye `--index-only` para reanudar sin repetir la extracción.
+
+### Coste operativo que esto deja al descubierto
+
+Un reindexado de 654 chunks tarda ~55 minutos, casi todo en generar un resumen
+por chunk con el LLM local. **Los resúmenes no se cachean**: cualquier reintento
+los recalcula íntegros, y un fallo al final tira el trabajo entero. Era el
+hallazgo M2 de la auditoría inicial; aquí se ve su costo real. Cachearlos por
+hash del texto del chunk convertiría un reintento de 55 minutos en uno de
+segundos.
+
+## 21. Orden recomendado para lo que queda
 
 1. ~~Levantar el reranker~~ — hecho, +0.20 en `hit@1`.
 2. ~~Ablación de etapas post-rerank~~ — hecho, +0.034 adicional.
