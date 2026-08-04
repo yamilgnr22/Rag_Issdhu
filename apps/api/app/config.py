@@ -192,16 +192,14 @@ class Settings(BaseSettings):
     retrieval_diversify_enabled: bool = Field(default=True)
     retrieval_answer_prioritization_enabled: bool = Field(default=True)
     rerank_mode: Literal["off", "local", "cohere"] = Field(default="local")
-    # Cuantos candidatos ve el cross-encoder. Con 24 el filtro heuristico previo
-    # decidia de facto el resultado: en "que principios rigen los tributos" el
-    # articulo correcto quedaba en la posicion 30 de 35 del orden heuristico y
-    # nunca llegaba al reranker, que si lo prefiere cuando lo ve.
-    #
-    # Las mediciones que hicieron descartar 48 estaban contaminadas: el
-    # microservicio acumulaba VRAM y se degradaba con el uso (139s por lote
-    # frente a 3s en frio). Corregido eso, el coste de 48 frente a 32 vuelve a
-    # ser marginal.
-    rerank_top_n: int = Field(default=48)
+    # Cuantos candidatos ve el cross-encoder. Se probo subirlo a 48 porque el
+    # filtro heuristico previo dejaba fuera al articulo correcto en algunos
+    # casos, pero el diseno factorial 2x2 sobre 161 preguntas mostro que por si
+    # solo no aporta: hit@1 76,6% con 24 y con 48 usando la formula historica, y
+    # 80,6% con ambos usando la mezcla ponderada. Lo que aporta es la mezcla, no
+    # el numero de candidatos, asi que se conserva 24 por ser mas barato
+    # (23,6 s/consulta frente a 24,8).
+    rerank_top_n: int = Field(default=24)
     # Peso del cross-encoder frente a la puntuacion heuristica. Antes el score
     # del proveedor se SUMABA al heuristico, que llega a valores de 2-3 mientras
     # el proveedor aporta como mucho 1: la opinion del reranker quedaba diluida.

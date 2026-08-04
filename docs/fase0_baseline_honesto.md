@@ -703,6 +703,49 @@ la base principal; borrar ese archivo invalida el cache entero.
 Medido reindexando dos veces el acta 207 (41 chunks): **231,8 s → 16,4 s**. Una
 llamada suelta pasa de 19,3 s a 0,00 s con resultado idéntico.
 
+| 16 | Mezcla ponderada provider/heurístico en el rerank | **+4,0** `hit@1` |
+| 17 | Corregir la degradación por VRAM del microservicio reranker | lote de 139 s → **3,3 s** |
+
+### El rerank: qué se probó y qué resultó
+
+Diagnóstico de los 7 fallos de `ley_822`. Se descartaron con datos dos hipótesis
+razonables: que los artículos de definiciones perdieran por genéricos, y que el
+texto con palabras pegadas los perjudicara (los que fallan tienen 2,3 % de tokens
+pegados; los que aciertan, 3,7 %).
+
+La causa real tenía dos partes. El artículo correcto quedaba en la posición 30 de
+35 del orden heurístico y `rerank_top_n=24` lo dejaba **fuera del cross-encoder**;
+y aunque llegase, el score del proveedor se **sumaba** a un heurístico de mayor
+escala (2-3 frente a 0-1), de modo que su opinión se diluía.
+
+Diseño factorial 2×2 sobre las 161 preguntas:
+
+| | 24 + suma | 48 + suma | **24 + mezcla** | 48 + mezcla |
+|---|---|---|---|---|
+| hit@1 | 76,6 | 76,6 | **80,6** | 80,6 |
+| hit@3 | 90,3 | 91,1 | **91,1** | 91,1 |
+| MRR | 0,836 | 0,840 | **0,862** | 0,864 |
+| block@3 | 94,6 | 91,9 | 91,9 | 91,9 |
+| Casos pasados | 147 | 147 | **147** | 147 |
+| s/consulta | 25,2 | 29,8 | **23,6** | 24,8 |
+
+**Ampliar los candidatos no aporta nada por sí solo** (hit@1 idéntico con 24 y 48
+bajo la fórmula histórica). Lo que aporta los 4 puntos es la mezcla ponderada, y
+lo hace igual con 24 candidatos que con 48. Se conserva `rerank_top_n=24` por ser
+la celda más barata; la fórmula histórica queda accesible con
+`rerank_provider_weight` negativo, para poder repetir la ablación.
+
+Advertencia sobre el alcance: **los casos resueltos no se mueven — 147/161 en las
+cuatro celdas**. La mejora es de calidad de ranking (la respuesta correcta aparece
+primera más a menudo, lo que para el usuario significa menos lectura), no de
+cobertura. Y `block@3` cae 2,7 puntos: se recuperan `h065` y `h060`, se pierde
+`h119`.
+
+Nota metodológica: las primeras mediciones de latencia de esta fase (100-205 s por
+consulta) estaban contaminadas por la degradación de VRAM del reranker, no por la
+configuración. La latencia debe medirse en frío o verificando el estado del
+servicio; extrapolar de corridas largas dio tres estimaciones erróneas seguidas.
+
 ### Pendiente, por relación impacto/esfuerzo
 
 1. **Reranker como servicio persistente.** Depende de un proceso a mano; cayó
