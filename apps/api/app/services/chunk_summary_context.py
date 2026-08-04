@@ -1,9 +1,89 @@
+import hashlib
 import json
+import logging
 import re
+import sqlite3
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 
 import httpx
+
+
+logger = logging.getLogger(__name__)
+
+_CACHE_LOCK = threading.Lock()
+
+
+class SummaryCache:
+    """Cache persistente de resumenes por chunk.
+
+    Clave: hash del prompt exacto mas el modelo. Cualquier cambio en el texto del
+    chunk, en los metadatos que entran al prompt o en el modelo produce una clave
+    distinta, asi que no hace falta versionar el prompt a mano.
+
+    Vive en su propio SQLite para no competir por el lock de la base principal
+    durante la indexacion.
+    """
+
+    def __init__(self, path: str) -> None:
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._ensure_schema()
+
+    def _connect(self) -> sqlite3.Connection:
+        connection = sqlite3.connect(self.path, timeout=30)
+        connection.execute("PRAGMA journal_mode=WAL")
+        return connection
+
+    def _ensure_schema(self) -> None:
+        with _CACHE_LOCK, self._connect() as connection:
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS summary_cache (
+                    cache_key TEXT PRIMARY KEY,
+                    model TEXT NOT NULL,
+                    summary TEXT NOT NULL,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+
+    @staticmethod
+    def build_key(*, prompt: str, model: str) -> str:
+        digest = hashlib.sha256()
+        digest.update(model.encode("utf-8"))
+        digest.update(b"\x00")
+        digest.update(prompt.encode("utf-8"))
+        return digest.hexdigest()
+
+    def get(self, cache_key: str) -> str | None:
+        try:
+            with _CACHE_LOCK, self._connect() as connection:
+                row = connection.execute(
+                    "SELECT summary FROM summary_cache WHERE cache_key = ?", (cache_key,)
+                ).fetchone()
+            return row[0] if row else None
+        except Exception as exc:
+            logger.warning("summary_cache_read_failed error=%s:%s", type(exc).__name__, exc)
+            return None
+
+    def put(self, cache_key: str, *, model: str, summary: str) -> None:
+        try:
+            with _CACHE_LOCK, self._connect() as connection:
+                connection.execute(
+                    "INSERT OR REPLACE INTO summary_cache (cache_key, model, summary) VALUES (?, ?, ?)",
+                    (cache_key, model, summary),
+                )
+        except Exception as exc:
+            logger.warning("summary_cache_write_failed error=%s:%s", type(exc).__name__, exc)
+
+    def entries(self) -> int:
+        try:
+            with _CACHE_LOCK, self._connect() as connection:
+                return int(connection.execute("SELECT COUNT(*) FROM summary_cache").fetchone()[0])
+        except Exception:
+            return 0
 
 
 @dataclass
@@ -184,8 +264,57 @@ class ChunkSummaryContextService:
         if provider.api_key:
             headers["Authorization"] = f"Bearer {provider.api_key}"
 
+        prompt = self._build_summary_prompt(
+            document_title=document_title,
+            document_class=document_class,
+            canonical_label=canonical_label,
+            unit_type=unit_type,
+            unit_number=unit_number,
+            path_text=path_text,
+            retrieval_context=retrieval_context,
+            raw_text=raw_text,
+            unit_topic=unit_topic,
+        )
+
+        cache = self._cache()
+        cache_key = None
+        if cache is not None:
+            cache_key = SummaryCache.build_key(prompt=prompt, model=provider.model)
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return cached
+
+        summary = self._call_provider(provider=provider, headers=headers, prompt=prompt)
+        if summary and cache is not None and cache_key is not None:
+            cache.put(cache_key, model=provider.model, summary=summary)
+        return summary
+
+    def _cache(self) -> SummaryCache | None:
+        if not getattr(self.settings, "chunk_summary_cache_enabled", True):
+            return None
+        if getattr(self, "_cache_instance", None) is None:
+            try:
+                self._cache_instance = SummaryCache(self.settings.chunk_summary_cache_path)
+            except Exception as exc:
+                logger.warning("summary_cache_disabled error=%s:%s", type(exc).__name__, exc)
+                self._cache_instance = None
+        return self._cache_instance
+
+    def _build_summary_prompt(
+        self,
+        *,
+        document_title: str,
+        document_class: str,
+        canonical_label: str,
+        unit_type: str,
+        unit_number: str,
+        path_text: str,
+        retrieval_context: str,
+        raw_text: str,
+        unit_topic: str,
+    ) -> str:
         max_chars = max(600, int(self.settings.chunk_summary_context_max_input_chars))
-        prompt = "\n".join(
+        return "\n".join(
             [
                 "Genera una micro-contextualizacion factual para retrieval.",
                 "Devuelve JSON estricto: {\"summary\": \"...\"}.",
@@ -209,6 +338,13 @@ class ChunkSummaryContextService:
             ]
         )
 
+    def _call_provider(
+        self,
+        *,
+        provider: ChunkSummaryProviderConfig,
+        headers: dict[str, str],
+        prompt: str,
+    ) -> str | None:
         try:
             request_payload = {
                 "model": provider.model,

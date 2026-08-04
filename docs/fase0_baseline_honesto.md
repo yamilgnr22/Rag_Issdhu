@@ -14,7 +14,7 @@ en uso real. Tres razones explican la contradicción:
    `retrieval_eval_cases.json`).
 2. Frases literales de las suites de evaluación están codificadas como boosts en
    `BOOSTABLE_PHRASES` (`app/services/retrieval.py`).
-3. **Todas** las preguntas del gold set incluyen ya el número de artículo
+2. **Todas** las preguntas del gold set incluyen ya el número de artículo
    ("Que establece el Arto. 45 sobre..."), que es justo el dato que el usuario no
    conoce cuando pregunta.
 
@@ -692,29 +692,36 @@ Probado y descartado con evidencia: el corte automático por umbral de confianza
 (descartaba respuestas correctas) y exponer la relevancia en el prompt (sin
 efecto medible).
 
+| 15 | Cache de resúmenes por chunk (hallazgo M2) | reindexado **−93 %** |
+
+El cache usa como clave el hash del prompt exacto más el modelo, de modo que
+cualquier cambio en el texto del chunk, en los metadatos que entran al prompt o
+en el modelo genera una clave distinta: no hace falta versionarlo a mano. Vive
+en su propio SQLite (`.data/summary_cache.db`) para no competir por el lock de
+la base principal; borrar ese archivo invalida el cache entero.
+
+Medido reindexando dos veces el acta 207 (41 chunks): **231,8 s → 16,4 s**. Una
+llamada suelta pasa de 19,3 s a 0,00 s con resultado idéntico.
+
 ### Pendiente, por relación impacto/esfuerzo
 
-1. **Cachear los resúmenes por chunk** (hallazgo M2). Cada reindexado cuesta ~55
-   minutos casi enteros en regenerar resúmenes que no cambiaron, y un fallo al
-   final lo tira todo. Hoy costó dos horas de recálculo. Cachear por hash del
-   texto lo convierte en segundos.
-2. **Reranker como servicio persistente.** Depende de un proceso a mano; cayó
+1. **Reranker como servicio persistente.** Depende de un proceso a mano; cayó
    tres veces en una sesión y cada caída vale −0.20 de `hit@1` en silencio.
 3. **Ley 822**: concentra 6 de los 14 fallos. Preguntas conceptuales cuya
    respuesta está en los artículos de definiciones, que pierden contra artículos
    operativos de numeración alta. Único corpus bajo el 80 %.
-4. **Endpoint de administración de ACL.** El control de acceso funciona pero no
+3. **Endpoint de administración de ACL.** El control de acceso funciona pero no
    se puede administrar: cambiar los permisos de un documento exige reindexarlo
    o tocar los índices a mano.
-5. **Modo estricto de embeddings** (C3): hoy la caída a vectores hash se
+4. **Modo estricto de embeddings** (C3): hoy la caída a vectores hash se
    registra pero no se bloquea.
-6. Separar el fixture de entrenamiento del router del de evaluación y
+5. Separar el fixture de entrenamiento del router del de evaluación y
    reentrenarlo con preguntas en lenguaje natural.
-7. NIIF secciones 28 y 29: completas en el índice pero aún no recuperables.
-8. Analizador español con `asciifolding` en OpenSearch.
-9. Deduplicación por checksum en la ingesta.
-10. Ablación de `BOOSTABLE_PHRASES` y poda de los clasificadores sklearn
+6. NIIF secciones 28 y 29: completas en el índice pero aún no recuperables.
+7. Analizador español con `asciifolding` en OpenSearch.
+8. Deduplicación por checksum en la ingesta.
+9. Ablación de `BOOSTABLE_PHRASES` y poda de los clasificadores sklearn
     entrenados con pocos ejemplos.
-11. Revisar los targets marcados `proposed_auto` en el fixture.
-12. Exponer la confianza en la UI como señal informativa, nunca como
+10. Revisar los targets marcados `proposed_auto` en el fixture.
+11. Exponer la confianza en la UI como señal informativa, nunca como
     probabilidad de acierto.

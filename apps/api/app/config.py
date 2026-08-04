@@ -136,6 +136,13 @@ class Settings(BaseSettings):
         default="cloud_llm"
     )
     chunk_summary_context_max_input_chars: int = Field(default=1800)
+    # Cache de resumenes por chunk. El resumen depende solo del prompt y del
+    # modelo, pero se recalculaba en cada indexacion: reindexar NIIF costaba 57
+    # minutos y GAFI 55, casi todo esperando al LLM, y un fallo al final obligaba
+    # a rehacerlos identicos. Vive en su propio SQLite para no competir por el
+    # lock de la base principal; borrar el archivo invalida el cache entero.
+    chunk_summary_cache_enabled: bool = Field(default=True)
+    chunk_summary_cache_path: str = Field(default=".data/summary_cache.db")
     chunk_summary_context_cloud_base_url: str | None = Field(default=None)
     chunk_summary_context_cloud_api_key: str | None = Field(default=None)
     chunk_summary_context_cloud_model: str | None = Field(default=None)
