@@ -31,12 +31,24 @@ class HealthResponse(BaseModel):
     device: str
     default_model: str
     cached_models: list[str]
+    max_length: int | None = None
+    vram_used_mb: int | None = None
+
+
+def _vram_used_mb() -> int | None:
+    try:
+        if torch.cuda.is_available():
+            return int(torch.cuda.memory_reserved() / (1024 * 1024))
+    except Exception:
+        pass
+    return None
 
 
 class RerankerRegistry:
-    def __init__(self, *, device: str, trust_remote_code: bool) -> None:
+    def __init__(self, *, device: str, trust_remote_code: bool, max_length: int | None = None) -> None:
         self.device = device
         self.trust_remote_code = trust_remote_code
+        self.max_length = max_length
         self._models: dict[str, CrossEncoder] = {}
 
     def get(self, model_name: str) -> CrossEncoder:
@@ -47,6 +59,11 @@ class RerankerRegistry:
                 device=self.device,
                 trust_remote_code=self.trust_remote_code,
             )
+            if self.max_length:
+                # Sin esto se usa el limite del tokenizer (8192 en bge-m3): la
+                # atencion crece con el cuadrado de la longitud y la VRAM se
+                # llena hasta degradar el servicio.
+                model.max_length = int(self.max_length)
             self._models[model_name] = model
         return model
 
@@ -80,6 +97,7 @@ resolved_device = _resolve_device(settings.reranker_device)
 registry = RerankerRegistry(
     device=resolved_device,
     trust_remote_code=settings.reranker_trust_remote_code,
+    max_length=settings.reranker_max_length,
 )
 
 app = FastAPI(
@@ -96,6 +114,8 @@ def healthcheck() -> HealthResponse:
         device=resolved_device,
         default_model=settings.reranker_default_model,
         cached_models=registry.cached_models,
+        max_length=settings.reranker_max_length,
+        vram_used_mb=_vram_used_mb(),
     )
 
 
@@ -119,6 +139,15 @@ def rerank(request: RerankRequest) -> RerankResponse:
         )
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"reranker_load_or_predict_failed: {exc}") from exc
+
+    # PyTorch retiene la memoria que reservo para el pico de cada peticion. Sin
+    # liberarla, la VRAM se llena tras varias llamadas y el servicio se degrada:
+    # se midieron 139s para un lote que en frio tarda 3s.
+    if resolved_device == "cuda":
+        try:
+            torch.cuda.empty_cache()
+        except Exception:
+            pass
 
     results = _rank_scores(scores=scores, top_n=min(request.top_n, len(request.documents)))
     return RerankResponse(

@@ -1534,7 +1534,15 @@ class RetrievalService:
             return []
 
         hit_map = {hit.chunk_id: hit for hit in candidates}
-        normalized_scores = self._normalize_provider_scores(outcome.scores, [hit.chunk_id for hit in candidates])
+        keys = [hit.chunk_id for hit in candidates]
+        normalized_scores = self._normalize_provider_scores(outcome.scores, keys)
+        # El heuristico se normaliza sobre los mismos candidatos para que ambas
+        # señales vivan en [0,1] y el peso signifique lo que dice. Sumarlas sin
+        # normalizar dejaba mandar siempre al heuristico, que es de mayor escala.
+        heuristic_raw = {hit.chunk_id: hit.rerank_score for hit in candidates}
+        normalized_heuristic = self._normalize_provider_scores(heuristic_raw, keys)
+        weight = min(1.0, max(0.0, float(self.settings.rerank_provider_weight)))
+
         reranked: list[RetrievalHit] = []
         seen: set[str] = set()
         for rank, chunk_id in enumerate(outcome.ordered_keys, start=1):
@@ -1545,13 +1553,26 @@ class RetrievalService:
             raw_score = outcome.scores.get(chunk_id)
             if raw_score is not None:
                 hit.provider_rerank_score = float(raw_score)
+            heuristic_boost = normalized_heuristic.get(chunk_id, 0.0)
             positional_boost = 1.0 - ((rank - 1) / max(1, len(candidates)))
             role_alignment = self._evidence_role_alignment_score(evidence_intent, hit)
-            hit.rerank_score = hit.rerank_score + provider_boost + (0.25 * positional_boost) + (0.15 * role_alignment)
+            hit.rerank_score = (
+                (weight * provider_boost)
+                + ((1.0 - weight) * heuristic_boost)
+                + (0.05 * positional_boost)
+                + (0.05 * role_alignment)
+            )
             reranked.append(hit)
             seen.add(chunk_id)
 
-        tail = [hit_map[chunk_id] for chunk_id in hit_map if chunk_id not in seen]
+        # Candidatos que se enviaron pero el proveedor no devolvio: conservan solo
+        # la parte heuristica, en la misma escala, de modo que queden por debajo.
+        tail: list[RetrievalHit] = []
+        for chunk_id, hit in hit_map.items():
+            if chunk_id in seen:
+                continue
+            hit.rerank_score = (1.0 - weight) * normalized_heuristic.get(chunk_id, 0.0)
+            tail.append(hit)
         return sorted(reranked + tail, key=lambda item: item.rerank_score, reverse=True)
 
     def _apply_visibility_policy(

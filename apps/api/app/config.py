@@ -192,7 +192,24 @@ class Settings(BaseSettings):
     retrieval_diversify_enabled: bool = Field(default=True)
     retrieval_answer_prioritization_enabled: bool = Field(default=True)
     rerank_mode: Literal["off", "local", "cohere"] = Field(default="local")
-    rerank_top_n: int = Field(default=24)
+    # Cuantos candidatos ve el cross-encoder. Con 24 el filtro heuristico previo
+    # decidia de facto el resultado: en "que principios rigen los tributos" el
+    # articulo correcto quedaba en la posicion 30 de 35 del orden heuristico y
+    # nunca llegaba al reranker, que si lo prefiere cuando lo ve.
+    #
+    # Las mediciones que hicieron descartar 48 estaban contaminadas: el
+    # microservicio acumulaba VRAM y se degradaba con el uso (139s por lote
+    # frente a 3s en frio). Corregido eso, el coste de 48 frente a 32 vuelve a
+    # ser marginal.
+    rerank_top_n: int = Field(default=48)
+    # Peso del cross-encoder frente a la puntuacion heuristica. Antes el score
+    # del proveedor se SUMABA al heuristico, que llega a valores de 2-3 mientras
+    # el proveedor aporta como mucho 1: la opinion del reranker quedaba diluida.
+    # Caso medido: en "que principios rigen los tributos" el cross-encoder da
+    # 0.4866 al articulo correcto y 0.0680 al que ganaba, y aun asi el correcto
+    # terminaba en la posicion 12. Con 1.0 manda solo el proveedor; con 0.0 se
+    # vuelve al comportamiento anterior.
+    rerank_provider_weight: float = Field(default=0.7)
     rerank_local_base_url: str | None = Field(default=None)
     rerank_local_api_key: str | None = Field(default=None)
     rerank_local_model: str | None = Field(default="BAAI/bge-reranker-v2-m3")
