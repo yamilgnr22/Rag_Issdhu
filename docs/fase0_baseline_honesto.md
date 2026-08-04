@@ -748,7 +748,15 @@ servicio; extrapolar de corridas largas dio tres estimaciones erróneas seguidas
 
 ### Pendiente, por relación impacto/esfuerzo
 
-1. **Reranker como servicio persistente.** Depende de un proceso a mano; cayó
+1. ~~Reranker como servicio persistente~~ — resuelto con
+   `scripts/start-reranker.ps1` (y `.bat` para doble clic): arranca, detiene y
+   consulta estado, es idempotente y reinicia procesos que no responden. Se
+   descartó registrarlo como servicio de Windows con arranque automático: en un
+   equipo de trabajo es invasivo y no hace falta, porque el modelo se carga de
+   forma perezosa (arrancado y sin usar ocupa ~700 MB de RAM y **0 de VRAM**;
+   los ~2,2 GB se reservan con la primera consulta). El servicio permanente
+   corresponde al servidor de despliegue.
+1. **[obsoleto] Reranker como servicio persistente.** Depende de un proceso a mano; cayó
    tres veces en una sesión y cada caída vale −0.20 de `hit@1` en silencio.
 3. **Ley 822**: concentra 6 de los 14 fallos. Preguntas conceptuales cuya
    respuesta está en los artículos de definiciones, que pierden contra artículos

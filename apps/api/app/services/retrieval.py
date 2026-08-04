@@ -1541,7 +1541,11 @@ class RetrievalService:
         # normalizar dejaba mandar siempre al heuristico, que es de mayor escala.
         heuristic_raw = {hit.chunk_id: hit.rerank_score for hit in candidates}
         normalized_heuristic = self._normalize_provider_scores(heuristic_raw, keys)
-        weight = min(1.0, max(0.0, float(self.settings.rerank_provider_weight)))
+        raw_weight = float(self.settings.rerank_provider_weight)
+        # Negativo = formula historica (sumar el score del proveedor al
+        # heuristico sin normalizar). Se conserva para poder ablacionar.
+        legacy_blend = raw_weight < 0
+        weight = min(1.0, max(0.0, raw_weight))
 
         reranked: list[RetrievalHit] = []
         seen: set[str] = set()
@@ -1556,12 +1560,20 @@ class RetrievalService:
             heuristic_boost = normalized_heuristic.get(chunk_id, 0.0)
             positional_boost = 1.0 - ((rank - 1) / max(1, len(candidates)))
             role_alignment = self._evidence_role_alignment_score(evidence_intent, hit)
-            hit.rerank_score = (
-                (weight * provider_boost)
-                + ((1.0 - weight) * heuristic_boost)
-                + (0.05 * positional_boost)
-                + (0.05 * role_alignment)
-            )
+            if legacy_blend:
+                hit.rerank_score = (
+                    hit.rerank_score
+                    + provider_boost
+                    + (0.25 * positional_boost)
+                    + (0.15 * role_alignment)
+                )
+            else:
+                hit.rerank_score = (
+                    (weight * provider_boost)
+                    + ((1.0 - weight) * heuristic_boost)
+                    + (0.05 * positional_boost)
+                    + (0.05 * role_alignment)
+                )
             reranked.append(hit)
             seen.add(chunk_id)
 
@@ -1571,7 +1583,8 @@ class RetrievalService:
         for chunk_id, hit in hit_map.items():
             if chunk_id in seen:
                 continue
-            hit.rerank_score = (1.0 - weight) * normalized_heuristic.get(chunk_id, 0.0)
+            if not legacy_blend:
+                hit.rerank_score = (1.0 - weight) * normalized_heuristic.get(chunk_id, 0.0)
             tail.append(hit)
         return sorted(reranked + tail, key=lambda item: item.rerank_score, reverse=True)
 
