@@ -748,31 +748,37 @@ servicio; extrapolar de corridas largas dio tres estimaciones erróneas seguidas
 
 ### Pendiente, por relación impacto/esfuerzo
 
-1. ~~Reranker como servicio persistente~~ — resuelto con
-   `scripts/start-reranker.ps1` (y `.bat` para doble clic): arranca, detiene y
-   consulta estado, es idempotente y reinicia procesos que no responden. Se
-   descartó registrarlo como servicio de Windows con arranque automático: en un
-   equipo de trabajo es invasivo y no hace falta, porque el modelo se carga de
-   forma perezosa (arrancado y sin usar ocupa ~700 MB de RAM y **0 de VRAM**;
-   los ~2,2 GB se reservan con la primera consulta). El servicio permanente
-   corresponde al servidor de despliegue.
-1. **[obsoleto] Reranker como servicio persistente.** Depende de un proceso a mano; cayó
-   tres veces en una sesión y cada caída vale −0.20 de `hit@1` en silencio.
-3. **Ley 822**: concentra 6 de los 14 fallos. Preguntas conceptuales cuya
-   respuesta está en los artículos de definiciones, que pierden contra artículos
-   operativos de numeración alta. Único corpus bajo el 80 %.
-3. **Endpoint de administración de ACL.** El control de acceso funciona pero no
+**Calidad de la medición** (barato, y condiciona todo lo demás)
+
+1. Revisar los targets marcados `proposed_auto` en el fixture. Dos ya
+   identificados como discutibles: `h060` ("¿cómo se deprecian los activos?",
+   ambigua entre el marco contable de NIIF y el fiscal de la Ley 822) y `h017`.
+   Un fixture que penaliza respuestas defendibles sesga toda decisión futura.
+
+**Operación y seguridad**
+
+2. **Endpoint de administración de ACL.** El control de acceso funciona pero no
    se puede administrar: cambiar los permisos de un documento exige reindexarlo
    o tocar los índices a mano.
-4. **Modo estricto de embeddings** (C3): hoy la caída a vectores hash se
-   registra pero no se bloquea.
-5. Separar el fixture de entrenamiento del router del de evaluación y
-   reentrenarlo con preguntas en lenguaje natural.
+3. **Modo estricto de embeddings** (C3): la caída a vectores hash se registra
+   pero no se bloquea.
+4. Deduplicación por checksum en la ingesta.
+
+**Calidad de respuesta** (rendimiento decreciente con el fixture actual)
+
+5. **Ley 822**: 5 de los 14 fallos. El denso acierta y el sparse no encuentra
+   nada, y el RRF los penaliza por estar en una sola lista. Dos vías: rango
+   virtual para los ausentes en el RRF, o analizador español con `asciifolding`.
 6. NIIF secciones 28 y 29: completas en el índice pero aún no recuperables.
-7. Analizador español con `asciifolding` en OpenSearch.
-8. Deduplicación por checksum en la ingesta.
-9. Ablación de `BOOSTABLE_PHRASES` y poda de los clasificadores sklearn
-    entrenados con pocos ejemplos.
-10. Revisar los targets marcados `proposed_auto` en el fixture.
-11. Exponer la confianza en la UI como señal informativa, nunca como
-    probabilidad de acierto.
+7. Separar el fixture de entrenamiento del router del de evaluación y
+   reentrenarlo con preguntas en lenguaje natural.
+8. Ablación de `BOOSTABLE_PHRASES` y poda de los clasificadores sklearn
+   entrenados con pocos ejemplos.
+9. Exponer la confianza en la UI como señal informativa, nunca como
+   probabilidad de acierto.
+
+**Nota sobre el techo actual**: las cuatro últimas mediciones dieron **147/161
+casos resueltos, invariable**, moviéndose solo el orden dentro del top-k. Con
+161 preguntas y 14 fallos, la resolución del fixture ya no distingue mejoras
+reales del ruido. Subir de aquí probablemente exige más preguntas antes que más
+ajustes.
